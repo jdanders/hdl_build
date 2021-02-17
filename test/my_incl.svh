@@ -1,0 +1,1 @@
+localparam VALUE=1;

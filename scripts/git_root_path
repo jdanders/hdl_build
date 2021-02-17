@@ -1,0 +1,17 @@
+#!/bin/bash
+
+check_git() {
+    if [ -d ${1}/.git ]; then
+        echo $(readlink -f ${1}/${2})
+        exit 0
+    fi
+}
+curdir=$(readlink -f .)
+while [ "$curdir" != "/" ]; do
+    check_git ${curdir} ${1}
+    curdir=$(dirname "$curdir")
+done
+check_git ${curdir} ${1}
+
+echo "Could not find git root path"
+exit 1

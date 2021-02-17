@@ -1,0 +1,4 @@
+#!/bin/bash
+
+mkdir -p $(dirname ${PROJECT})
+cp $2 ${PROJECT}.qsf
