@@ -66,10 +66,14 @@ SUBS_QUARTUS := --subsfilelist '$(SYNTH_SUBSTITUTIONS)'
 # The '%' becomes the module name
 # The '$*' is replaced by that module name
 $(DEP_DIR)/%.quartus.d: $(SYNTH_SUB_DONE) $(predependency_hook) | $(DEP_DIR) $(BLOG_DIR)
-	@$(SCRIPTS)/run_full_log_on_err.sh  \
-	 "Identifying dependencies for $*$(UPDATE)" \
-	 "$(MAKEDEPEND_CMD) $(SUBS_QUARTUS) $(MAKEDEP_TOOL_QUARTUS) $*" \
-	 $(BLOG_DIR)/dependency_$*_quartus.log
+	@if [ -d "$(SRC_BASE_DIR)" ]; then\
+	  $(SCRIPTS)/run_full_log_on_err.sh  \
+	   "Identifying dependencies for $*$(UPDATE)" \
+	   "$(MAKEDEPEND_CMD) $(SUBS_QUARTUS) $(MAKEDEP_TOOL_QUARTUS) $*" \
+	   $(BLOG_DIR)/dependency_$*_quartus.log; \
+	else \
+	  echo -e "$(RED)Could not find SRC_BASE_DIR$(NC)"; false; \
+	fi
 
 
 ##################### Include top level ##############################

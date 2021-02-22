@@ -5,6 +5,7 @@ The hdl_build system core depends on `make` auto-dependency generation. The insp
 http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/
 
 The key principles to understand:
+
 * when a Makefile includes another Makefile, that included Makefile becomes a dependency and can have a recipe that creates the included Makefile
 * Makefile targets can have dependencies added at any point in the final Makefile database. Just state the `target: [dependency list]` without a recipe.
 
@@ -70,6 +71,7 @@ mod1_INCLUDE := $(call uniq, $(pkg2_INCLUDE) $(submod2_INCLUDE) $(my_incl.svh_IN
 ```
 
 Explanation of sections:
+
 * add dependencies to the modules `.o` rule. This makes the result of this module dependent on the results of all the modules it depends on.
 * make itself dependent on the source file. This causes the dependencies of the file to be recalculated if the file itself changes.
 * include the `.d` files of the dependencies.
@@ -131,6 +133,7 @@ $(PARAMETER_DONE): $(SIM_PARAM_DEP)
 ```
 
 The first statement compares the current variable value against the recorded file that stored the value seen last time you ran `make`.
+
 * If the `variable_change.sh` script reports that it has changed, set sets a variable `SIM_PARAM_DEP`. This variable is a dependency on the recipe that will update the recorded value `$(PARAMETER_DONE)`.
     * If the variable is not set (values are equal) then the `$(PARAMETER_DONE)` recipe will not run.
         * The `$(PARAMETER_DONE)` remains untouched, so no new dependency work happens.
@@ -146,6 +149,7 @@ Simulation requires modules and packages compilation, headers file inclusion, an
 The first step in questa prep is the creation of the libraries. In order to allow parallel compilation of modules, each needs its own library. Because of how `vlib`, `vmap`, and `vlog` work, the libraries have to be created and mapped before any compilation actually begins.
 
 The steps to make libraries:
+
 * Perform dependency analysis
 * Create the `modelsim.ini` file. This is where mappings are ultimately stored
 * Compare `$(SIM_TOP_DEPS)` to the `$(SIM_LAST_DEPS)` record to see if the dependencies of the top level module have changed

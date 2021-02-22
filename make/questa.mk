@@ -42,10 +42,14 @@ SUBS_QUESTA := --subsfilelist '$(SIM_SUBSTITUTIONS)'
 # The '%' becomes the module name
 # The '$*' is replaced by that module name
 $(DEP_DIR)/%.questa.d: $(SIM_SUB_DONE) $(predependency_hook) | $(DEP_DIR) $(BLOG_DIR)
-	@$(SCRIPTS)/run_full_log_on_err.sh  \
-	 "$(CLEAR)Identifying dependencies for $*$(UPDATE)" \
-	 "$(MAKEDEPEND_CMD) $(SUBS_QUESTA) $(MAKEDEP_TOOL_QUESTA) $*" \
-	 $(BLOG_DIR)/dependency_$*_questa.log
+	@if [ -d "$(SRC_BASE_DIR)" ]; then\
+	  $(SCRIPTS)/run_full_log_on_err.sh  \
+	   "$(CLEAR)Identifying dependencies for $*$(UPDATE)" \
+	   "$(MAKEDEPEND_CMD) $(SUBS_QUESTA) $(MAKEDEP_TOOL_QUESTA) $*" \
+	   $(BLOG_DIR)/dependency_$*_questa.log; \
+	else \
+	  echo -e "$(RED)Could not find SRC_BASE_DIR$(NC)"; false; \
+	fi
 
 
 ##################### Include top level ##############################
@@ -163,9 +167,13 @@ $(PARAMETER_DONE): $(SIM_PARAM_DEP)
 	@touch $@
 
 
+TOOL_MODELSIM.INI := $(abspath $(shell which vsim)/../../modelsim.ini)
 $(MS_INI): $(SRC_MAKEFILES) | $(BLD_DIR) $(SIM_LIB_DIR)
 	@echo;echo -e "$O Creating sim environment $C"
-	@cp $(MSIM_PATH)/../modelsim.ini $(MS_INI)
+	@if [ -f $(TOOL_MODELSIM.INI) ]; then \
+	  cp $(TOOL_MODELSIM.INI) $(MS_INI); \
+	else echo -e "$(RED)Could not find Questa install modelsim.ini$(NC)"; false; \
+	fi
 	@chmod +w $(MS_INI)
 	@rm -rf $(WORK) && vlib $(WORK)
 	@echo "work = $(WORK)" > $(SIM_LIB_DIR)/work.map;

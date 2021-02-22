@@ -9,6 +9,7 @@ The build system is built on GNU Makefile with helper scripts that provide the f
 Run `make help` for a list of targets, and `make helpall` for descriptions.
 
 To get started
+
 * clone or copy the hdl_build directory into the root of your HDL git repository
 * copy the `example.mk` file to your project build directory and rename it to `Makefile`
 * edit `Makefile` to have the correct simulation top module name as `TOP_TB` and/or correct synthesis top module name as `TOP`
@@ -21,9 +22,9 @@ To add new makefiles that are not upstreamed, create *_addon.mk or *_custom.mk m
 
 # Software Requirements
 
-This build system depends on Intel Quartus and Mentor Questa for synthesis and simulation. Other tools could be added. For questa, the following environment variable must be set:
+This build system depends on Intel Quartus and Mentor Questa for synthesis and simulation. Other tools could be added.
 
-* `MSIM_PATH`: default `modelsim.ini` is copied from `$(MSIM_PATH)/../modelsim.ini`
+Mentor Questa needs to be in the path, and the default `modelsim.ini` file will be copied from the detected install path.
 
 Quartus install path must have the string "pro" in it if using Quartus Pro, and must not have "pro" in it if using Quartus Standard. The default path name of `intelFPGA_pro` meets this requirement.
 
@@ -53,14 +54,6 @@ The build system can be included in a local Makefile with the following include 
 ```make
 include /path/to/hdl_build/make/build.mk
 ```
-
-To make the include path independent of relative location of Makefile and not use absolute paths, it's recommended to add a script to your PATH environment that returns paths based on the repo directory location. See the `git_root_path` script in the `scripts` directory for an example. In that case, the **`build.mk`** would be included like this:
-
-```make
-include $(shell git_root_path hdl_build/make/build.mk)
-```
-
-If the `hdl_build` directory is not located as expected within the HDL repo, the `git_root_path` line should be modified to report the right location.
 
 ## Build structure
 

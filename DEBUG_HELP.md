@@ -64,6 +64,7 @@ The `$(MAKEDEPEND_CMD)` script doesn't recreate existing dependency `.d` files, 
 This is one of the trickier parts of the questa flow. In order to allow parallel compile of modules, each has to be in its own library. Because of how `vlib`, `vmap`, and `vlog` work, the libraries have to be created and mapped before any compilation actually begins.
 
 The steps to make that happen are these:
+
 * Create the `modelsim.ini` file. This is where mappings are ultimately stored
 * Analyze the `$(SIM_LAST_DEPS)` variable to see if the dependencies of the top level module have changed.
 * Create each library and record each module's presence with `<name>.seen` file and a map entry with `<name>.map` file in the $(SIM_LIB_DIR).

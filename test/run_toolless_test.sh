@@ -1,7 +1,6 @@
 #!/bin/bash
 
-export MSIM_PATH=fake_msim/sim
-export PATH=${PATH}:fake_bin
+export PATH=${PATH}:fake_bin:fake_msim/bin
 make comp
 SYNTH_OVERRIDE=y make project
 if [ ! $(ls -1 bld/deps | wc -l) -eq 24 ]; then

@@ -1,4 +1,7 @@
 #!/bin/bash
+# Search up the current path for a `.git` directory, and then append ${1} to
+# the resulting path. This is faster in most cases than calling
+# `git rev-parse --show-toplevel`
 
 check_git() {
     if [ -d ${1}/.git ]; then

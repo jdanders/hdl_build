@@ -84,9 +84,8 @@ def find_module(name, filelist, subs_dict):
         fname = fname + "."
     matched_paths = [path for path in filelist if fname in path]
     if len(matched_paths) > 1:
-        print(f"Warning: found multiple entries for {name} in files:", end='')
-        for ii in matched_paths:
-            print(ii, end='')
+        matches = " : ".join(matched_paths)
+        print(f"Warning: found multiple file entries for {name}: {matches}")
         print()
     if len(matched_paths) == 0:
         # No match

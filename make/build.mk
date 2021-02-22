@@ -22,10 +22,9 @@ endif
 
 # SRC_BASE_DIR is the directory to search for source files
 BUILD_PATH := $(abspath $(lastword $(MAKEFILE_LIST))/../..)
-# This assumes that the hdl_build directory is at the SRC_BASE_DIR
-SRC_BASE_DIR := $(abspath $(BUILD_PATH)/..)
-include $(BUILD_PATH)/make/color.mk
 SCRIPTS := $(BUILD_PATH)/scripts
+SRC_BASE_DIR := $(shell $(SCRIPTS)/git_root_path)
+include $(BUILD_PATH)/make/color.mk
 
 # set IGNORE_DIRS in upper makefile
 # `touch .ignore_build_system` in a directory that should be ignored
