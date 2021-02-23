@@ -34,7 +34,9 @@ printquesta-%: ## use 'make printquesta-VAR_NAME' to print variable after questa
 ##################### Module dependency targets ##############################
 
 MAKEDEP_TOOL_QUESTA := "questa"
-SUBS_QUESTA := --subsfilelist '$(SIM_SUBSTITUTIONS)'
+ifdef SIM_SUBSTITUTIONS
+  SUBS_QUESTA := --subsfilelist '$(SIM_SUBSTITUTIONS)'
+endif
 
 # The .d (dependent) targets are to calculate the dependencies of a file
 # The .d recipe is run whenever the sv file changes

@@ -20,7 +20,7 @@ set_global_assignment -name ALLOW_POWER_UP_DONT_CARE OFF
 # set_global_assignment -name STRATIXV_CONFIGURATION_SCHEME "PASSIVE PARALLEL X16"
 set_global_assignment -name ON_CHIP_BITSTREAM_DECOMPRESSION OFF
 
-set_global_assignment -name TIMEQUEST_REPORT_SCRIPT $::env(SRC_BASE_DIR)/hdl_build/scripts/synth_timequest_rpt_gen.tcl
+set_global_assignment -name TIMEQUEST_REPORT_SCRIPT $::env(SCRIPTS)/synth_timequest_rpt_gen.tcl
 
 if { [file exists $::env(ABSPATH_QUARTUS_FILE)] == 1} {
     source $::env(ABSPATH_QUARTUS_FILE)

@@ -58,7 +58,9 @@ DATE := `date '+%a %H:%M:%S'`
 ##################### Module dependency targets ##############################
 
 MAKEDEP_TOOL_QUARTUS := "quartus"
-SUBS_QUARTUS := --subsfilelist '$(SYNTH_SUBSTITUTIONS)'
+ifdef SYNTH_SUBSTITUTIONS
+  SUBS_QUARTUS := --subsfilelist '$(SYNTH_SUBSTITUTIONS)'
+endif
 
 # The .d (dependent) targets are to calculate the dependencies of a file
 # The .d recipe is run whenever the sv file changes
