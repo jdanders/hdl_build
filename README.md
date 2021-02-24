@@ -26,6 +26,12 @@ This build system depends on Intel Quartus and Mentor Questa for synthesis and s
 
 Mentor Questa needs to be in the path, and the default `modelsim.ini` file will be copied from the detected install path.
 
+Quartus synthesis requires two variables in the use Makefile to create a project:
+
+* `FAMILY`, for example `FAMILY := "Arria 10"`
+* `DEVICE`, for example `DEVICE := 10AS123N2F40I2SG`
+
+
 Quartus install path must have the string "pro" in it if using Quartus Pro, and must not have "pro" in it if using Quartus Standard. The default path name of `intelFPGA_pro` meets this requirement.
 
 Python 3.6 or higher is required, with the PyYAML yaml package installed for substitution files. If Python 3.6 is not available, replace all the 'f' strings with .format strings.

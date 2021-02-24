@@ -11,8 +11,8 @@ The key principles to understand:
 
 In order to adapt the structure to an HDL environment, several helper scripts are needed to get the `MAKEDEPEND` results described on that page. There are two scripts that accomplish that function:
 
-* find_dependencies.py: given the text contents of a system verilog file, this script will return a list of dependency modules, packages, and included files.
-* build_dependency_files.py: given a top level module name and source file base directory, this script creates the dependency makefiles (`.d` files) for each module, package, and included file that the top level depends on.
+* `find_dependencies.py`: given the text contents of a system verilog file, this script will return a list of dependency modules, packages, and included files.
+* `build_dependency_files.py`: given a top level module name and source file base directory, this script creates the dependency makefiles (`.d` files) for each module, package, and included file that the top level depends on.
     * It also features substitution parameters, to force modules to be mapped to specific file. Because substitutions created different dependency trees, it is also important to name the dependency tree. This is done using the "outprefixlist" parameter.
 
 Creating the .d files allows `make` to understand the dependencies of the project and efficiently build the system.
@@ -107,7 +107,7 @@ ifneq (,$(SIM_DEPS))
 endif
 ```
 
-If the result is not empty, than include the `TOP.d`
+If the result is not empty include the `TOP.d`
 
 ## Monitoring variables
 

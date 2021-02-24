@@ -14,7 +14,7 @@ PARAM_PERCENT_READY := 85
 
 VSIM_OPTIONS = -optionset UVMDEBUG +UVM_TESTNAME=$(UVM_TEST) +UVM_TIMEOUT=$(UVM_TIMEOUT)
 
-include $(shell git_root_path ../hdl_build/make/build.mk)
+include /path/to/hdl_build/make/build.mk
 
 # Example of compiling an external sim library
 SIM_LIB_APPEND := -L v3model
