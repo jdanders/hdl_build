@@ -332,7 +332,8 @@ $(GIT_INFO_FILE): $(DONE_DIR)/git.rpt | $(SYNTH_DIR)
 	@echo -e "Saving git repository information in $@"
 	@-git config user.name > $@
 	@-echo $(shell whoami)@$(shell hostname):$(shell pwd) >> $@
-	@-git rev-parse HEAD >> $@
+	@-echo "source repo   : $$(git rev-parse HEAD)" >> $@
+	@-cd $(BUILD_PATH) && echo "hdl_build repo: $$(git rev-parse HEAD)" >> $(abspath $@)
 	@-git status >> $@
 	@-git diff -b >> $@
 	@-git diff -b --cached >> $@
