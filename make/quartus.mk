@@ -329,6 +329,7 @@ $(DONE_DIR)/git.rpt: $(PROJ_TCL) | $(DONE_DIR)
 .PHONY: git_info
 git_info: $(GIT_INFO_FILE) ## Archive git info in project directory
 $(GIT_INFO_FILE): $(DONE_DIR)/git.rpt | $(SYNTH_DIR)
+ifdef GIT_REPO
 	@echo -e "Saving git repository information in $@"
 	@-git config user.name > $@
 	@-echo $(shell whoami)@$(shell hostname):$(shell pwd) >> $@
@@ -338,6 +339,8 @@ $(GIT_INFO_FILE): $(DONE_DIR)/git.rpt | $(SYNTH_DIR)
 	@-git diff -b >> $@
 	@-git diff -b --cached >> $@
 	@-git log -10 --pretty=format:'%h %s <%an>' >> $@
+endif
+	@touch $@
 
 
 ##################### Synthesis targets ##############################

@@ -34,7 +34,7 @@ $(DONE_DIR)/flash_v3model: $(v3ROOT)/dut/code/28F512.v $(v3ROOT)/dut/stack_2G.v 
 $(presimlib_hook): $(DONE_DIR)/flash_v3model
 
 # Example of generating code before dependency analysis
-PY_GEN := $(shell git_root_path python_gen_scripts)
+PY_GEN := $(SRC_BASE_DIR)/python_gen_scripts
 GEN_DIR = $(BLD_DIR)/gen
 $(GEN_DIR): | $(BLD_DIR)
 	mkdir -p $@

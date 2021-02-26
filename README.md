@@ -68,7 +68,8 @@ include /path/to/hdl_build/make/build.mk
 The **`build.mk`** file provides the entry point and the basic structure for the build system. Use `make help` for an up-to-date list of targets provided.
 
 * Variables
-    * **`SRC_BASE_DIR`** is available and holds the path of the directory that holds all source code.
+    * **`SRC_BASE_DIR`** must be set if not in git and holds the path of the directory that holds all source code.
+    * **`GIT_REPO`** will be defined if being run from a git repository, and will hold the git root directory (same as SRC_BASE_DIR if in git repo)
     * **`BLD_DIR`** variable sets the name of the result directory of the build system.
     * **`EXTRA_DIRS`** variable: a list of space delineated directory names to add during dependency search. This is only useful for directories normally ignored by the build system or a directory outside the SRC_BASE_DIR directory.
     * **`IGNORE_DIRS`** variable: a list of space delineated directory names to ignore during dependency search.
@@ -175,11 +176,10 @@ The **`quartus.mk`** file provides Quartus related targets and consumes the depe
 
 # Outside of git
 
-If you want to use this outside of a git repository, you will need to override two paths in your Makefile, like this:
+If you want to use this outside of a git repository, you will need to set the sourc path to search in your Makefile, like this:
 
 ```make
-override BUILD_PATH := /path/to/core/hdl_build
-override SRC_BASE_DIR := /path/to/current/src_base_dir
+SRC_BASE_DIR := /path/to/current/src_base_dir
 TOP_TB = sandbox_module
 
 include $(BUILD_PATH)/make/build.mk

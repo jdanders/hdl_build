@@ -1,13 +1,13 @@
 #-*- makefile -*-
 SYNTH_TOOL := quartuspro_20.4
-SW_DIR := $(shell git_root_path ../sw)
-STP_DIR := $(shell git_root_path ../stp)
+SW_DIR := $(SRC_BASE_DIR)/../sw
+STP_DIR := $(SRC_BASE_DIR)/../stp
 
 PARAM_BUILD_IN_SOC := 1
 
 FAMILY := "Arria 10"
 DEVICE := 10AS066N2F40I2SG
-SYNTH_SUBSTITUTIONS := $(shell git_root_path ip_cores/a10_ip_cores.yml) simcheck:
+SYNTH_SUBSTITUTIONS := $(SRC_BASE_DIR)/ip_cores/a10_ip_cores.yml simcheck:
 
 NUM_TIMING_TRIES := 3
 
@@ -38,7 +38,7 @@ $(LOCAL_HEX): $(SW_HEX) | $(SYNTH_DIR)
 $(presynth_hook): $(LOCAL_HEX)
 
 # Example for manually generating IP before synthesis
-ETH_1G_FILE := $(shell git_root_path ip_cores/ethernet/eth_1g_sgmii_a10.qsys)
+ETH_1G_FILE := $(SRC_BASE_DIR)/ip_cores/ethernet/eth_1g_sgmii_a10.qsys
 IP_FILE := $(IP_DIR)/eth_1g_sgmii_a10.qsys
 QIP_FILE := $(IP_DIR)/eth_1g_sgmii_a10/eth_1g_sgmii_a10.qip
 QIP_DONE := $(DONE_DIR)/eth_17.0.done
@@ -62,11 +62,11 @@ $(presynth_hook): $(QIP_DONE)
 
 # Example of running software build after NIOS is generated
 POSTGEN_DIR := $(CURDIR)/$(BLD_DIR)/software
-SW_BUILD := $(shell git_root_path nios_fpga/do_sw_build.sh)
+SW_BUILD := $(SRC_BASE_DIR)/nios_fpga/do_sw_build.sh
 BUILD_POSTGEN := $(SW_BUILD) $(POSTGEN_DIR)
 $(SYNTH_DIR)/postgen_nios.hex: \
-  $(shell git_root_path nios_fpga/postgen_example.c) \
-  $(shell git_root_path nios_fpga/postgen_makefile.sh) \
+  $(SRC_BASE_DIR)/nios_fpga/postgen_example.c \
+  $(SRC_BASE_DIR)/nios_fpga/postgen_makefile.sh \
   $(IP_DIR)/postgen_nios/postgen_nios.qip
 	mkdir -p $(POSTGEN_DIR)
 	@$(SCRIPTS)/run_print_err_only.sh \

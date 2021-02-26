@@ -7,7 +7,6 @@
 #    override BLD_DIR := bld_test
 
 # When creating new targets for users, add a ## comment on the line for help
-
 .DEFAULT_GOAL := helpall
 
 # Disable implicit suffixes for performance
@@ -20,11 +19,23 @@ ifndef SLOW
   MAKEFLAGS += --jobs=$(CPUS)
 endif
 
+# Recipes use bash
+SHELL = /bin/bash
+
 # SRC_BASE_DIR is the directory to search for source files
 BUILD_PATH := $(abspath $(lastword $(MAKEFILE_LIST))/../..)
 SCRIPTS := $(BUILD_PATH)/scripts
-SRC_BASE_DIR := $(shell $(SCRIPTS)/git_root_path)
 include $(BUILD_PATH)/make/color.mk
+
+# In git repo?
+GIT_ROOT := $(shell $(SCRIPTS)/git_root_path)
+ifneq (Could not find git root path,$(GIT_ROOT))
+  GIT_REPO := $(GIT_ROOT)
+endif
+# If not a git repo, define SRC_BASE_DIR outside of hdl_build
+ifdef GIT_REPO
+  SRC_BASE_DIR := $(GIT_ROOT)
+endif
 
 # set IGNORE_DIRS in upper makefile
 # `touch .ignore_build_system` in a directory that should be ignored
