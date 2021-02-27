@@ -7,6 +7,7 @@ PARAM_BUILD_IN_SOC := 1
 
 FAMILY := "Arria 10"
 DEVICE := 10AS066N2F40I2SG
+# Remove simcheck module from inclusion entirely by mapping to nothing
 SYNTH_SUBSTITUTIONS := $(SRC_BASE_DIR)/ip_cores/a10_ip_cores.yml simcheck:
 
 NUM_TIMING_TRIES := 3
@@ -22,7 +23,7 @@ STP_FILE := $(STP_DIR)/soc.stp
 
 QSF_EXTRA := set_global_assignment -name ENABLE_INIT_DONE_OUTPUT ON
 
-include /path/to/hdl_build/make/build.mk
+include /path/to/hdl_build/build.mk
 
 # Example to build NIOS software before synthesis
 LOCAL_HEX := $(SYNTH_DIR)/nios_debug_instruction_memory.hex

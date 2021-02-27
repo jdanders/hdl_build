@@ -1,0 +1,4 @@
+DEFAULT_SYNTH_TOOL := quartus_20.1
+ifndef SYNTH_TOOL
+  SYNTH_TOOL := $(DEFAULT_SYNTH_TOOL)
+endif

@@ -1,9 +1,5 @@
 #-*- makefile -*-
 #--- Quartus build rules: ## ----------------
-DEFAULT_SYNTH_TOOL := quartuspro_20.2
-ifndef SYNTH_TOOL
-  SYNTH_TOOL := $(DEFAULT_SYNTH_TOOL)
-endif
 
 ifndef NUM_TIMING_TRIES
   NUM_TIMING_TRIES := 10
@@ -21,8 +17,6 @@ $(post_qgen_ip_hook): | $(DONE_DIR) ## hook to run after ip generaation is done
 
 SYNTH_SUB_DONE := $(DONE_DIR)/synth_substitutions.done
 
-include $(BUILD_PATH)/make/color.mk
-
 # To print variables that need full dependency includes
 .PHONY: printquartus-%
 printquartus-%: ## use 'make printquartus-VAR_NAME' to print variable after quartus processing
@@ -35,7 +29,7 @@ always_run:
 	    if [[ `which quartus_sh` != *"$(SYNTH_TOOL)"* ]]; then \
 	      echo -e "ERROR: $(RED)Missing quartus tool $(SYNTH_TOOL) from path$(NC)\n (prefix with SYNTH_OVERRIDE=y to override)"; false; \
 	fi; fi
-	@ $(SCRIPTS)/quartus_running.sh
+	@ $(HDL_BUILD_PATH)/intel/quartus_running.sh
 
 
 SYNTH_DIR := $(BLD_DIR)/$(TOP)
@@ -69,7 +63,7 @@ endif
 # The '$*' is replaced by that module name
 $(DEP_DIR)/%.quartus.d: $(SYNTH_SUB_DONE) $(predependency_hook) | $(DEP_DIR) $(BLOG_DIR)
 	@if [ -d "$(SRC_BASE_DIR)" ]; then\
-	  $(SCRIPTS)/run_full_log_on_err.sh  \
+	  $(BUILD_SCRIPTS)/run_full_log_on_err.sh  \
 	   "Identifying dependencies for $*$(UPDATE)" \
 	   "$(MAKEDEPEND_CMD) $(SUBS_QUARTUS) $(MAKEDEP_TOOL_QUARTUS) $*" \
 	   $(BLOG_DIR)/dependency_$*_quartus.log; \
@@ -82,7 +76,7 @@ $(DEP_DIR)/%.quartus.d: $(SYNTH_SUB_DONE) $(predependency_hook) | $(DEP_DIR) $(B
 
 # targets: grep lines that have ':', remove cleans, sed drop last character
 # Extract all targets for synthesis:
-QUARTUS_TARGETS := $(shell grep -oe "^[a-z].*:" $(BUILD_PATH)/make/quartus.mk | grep -v clean | grep -v nuke | sed 's/:.*//')
+QUARTUS_TARGETS := $(shell grep -oe "^[a-z].*:" $(HDL_BUILD_PATH)/intel/quartus.mk | grep -v clean | grep -v nuke | sed 's/:.*//')
 
 # When the top .d file is included, make can't do anything until built.
 # Make sure it's included only when needed to avoid doing extra work
@@ -105,9 +99,9 @@ endif
 SYNTH_TOP_DEPS := $(sort $(strip $($(TOP)_DEPS)))
 
 # Extra sources for TCL commands
-TIMEQUEST_RPT_GEN := $(SCRIPTS)/synth_timequest_rpt_gen.tcl
-GLOBAL_SYNTH_SETTINGS := $(SCRIPTS)/synth_global_settings.tcl
-SDC_SETTINGS := $(SCRIPTS)/synth_sdc_settings.tcl
+TIMEQUEST_RPT_GEN := $(HDL_BUILD_PATH)/intel/synth_timequest_rpt_gen.tcl
+GLOBAL_SYNTH_SETTINGS := $(HDL_BUILD_PATH)/intel/synth_global_settings.tcl
+SDC_SETTINGS := $(HDL_BUILD_PATH)/intel/synth_sdc_settings.tcl
 
 # Altera tool version
 # (use `quartus_sh -v | grep -o "Pro"` to avoid path dep, but takes too long)
@@ -143,7 +137,7 @@ QSTP := quartus_stp
 STP_ARGS := --enable --signaltap --stp_file="$(STP_FILE)"
 ifdef STP_FILE
   STP_CHECK := @if [ -f "$(STP_FILE)" ]; then \
-     $(SCRIPTS)/run_print_err_only.sh \
+     $(BUILD_SCRIPTS)/run_print_err_only.sh \
 	 "$O Adding SignalTap file to project $C (see $(BLOG_DIR)/build_signaltap.log)" \
 	   "cd $(SYNTH_DIR) && $(QSTP) $(TOP) $(STP_ARGS)" \
 	   $(BLOG_DIR)/build_signaltap.log; \
@@ -191,7 +185,7 @@ modules_synth: $(DEP_DIR)/$(TOP).quartus.d ## print list of modules used in synt
 	@echo $(SYNTH_TOP_DEPS)
 
 # Check to see whether it's Quartus Pro or Std and record result
-ifeq ($(shell $(SCRIPTS)/variable_change.sh "$(PRO_VERSION)" $(PRO_RESULT)),yes)
+ifeq ($(shell $(BUILD_SCRIPTS)/variable_change.sh "$(PRO_VERSION)" $(PRO_RESULT)),yes)
 PRO_DEP:=$(PRO_RESULT).tmp
 endif
 
@@ -223,7 +217,7 @@ MAKE_PARAMS := $(filter PARAM_%,$(.VARIABLES))
 # Output for PARAM_NAME=value: set_parameter -name NAME value;
 TCL_PARAM := $(foreach pname, $(MAKE_PARAMS),set_parameter -name $(subst PARAM_,,$(pname)) $($(pname));)
 # Compare against old results, and force update if different
-ifeq ($(shell $(SCRIPTS)/variable_change.sh "$(TCL_PARAM)" $(PARAMETER_TCL)),yes)
+ifeq ($(shell $(BUILD_SCRIPTS)/variable_change.sh "$(TCL_PARAM)" $(PARAMETER_TCL)),yes)
 SYNTH_PARAM_DEP=$(PARAMETER_TCL).tmp
 endif
 
@@ -238,7 +232,7 @@ $(PARAMETER_TCL): $(SYNTH_PARAM_DEP)
 	@touch $@
 
 # Compare against old results, and force update if different
-ifeq ($(shell $(SCRIPTS)/variable_change.sh "$(ABSPATH_SDC_FILE)" $(SDC_DONE)),yes)
+ifeq ($(shell $(BUILD_SCRIPTS)/variable_change.sh "$(ABSPATH_SDC_FILE)" $(SDC_DONE)),yes)
 SDC_DEP=$(SDC_DONE).tmp
 endif
 # Update the parameters if any of the PARAM_ variable change
@@ -254,7 +248,7 @@ $(SDC_DONE): $(SDC_DEP) $(PRO_RESULT)
 
 # Build dependencies for SYNTH_SUBSTITUTIONS variable
 # Compare against old results, and force update if different
-ifeq ($(shell $(SCRIPTS)/variable_change.sh "$(SYNTH_SUBSTITUTIONS)" $(SYNTH_SUB_DONE)),yes)
+ifeq ($(shell $(BUILD_SCRIPTS)/variable_change.sh "$(SYNTH_SUBSTITUTIONS)" $(SYNTH_SUB_DONE)),yes)
 SYNTHSUB_DEP=$(SYNTH_SUB_DONE).tmp
 endif
 
@@ -283,7 +277,7 @@ $(DEP_DIR)/%.quartus.o:  $(PRO_RESULT) | $(DEP_DIR) $(BLOG_DIR) $(IP_DIR) $(TCL_
 	  if [ ! -f $(DEP_DIR)/$*.quartus.d ]; then \
 	    echo -e "$(RED)Dependency .d file missing for $*$(NC)"; false;\
 	  fi; \
-	  $(SCRIPTS)/run_quartus.sh $* $(word 2,$^) $(BLOG_DIR) $(FILES_TCL); \
+	  $(BUILD_SCRIPTS)/run_quartus.sh $* $(word 2,$^) $(BLOG_DIR) $(FILES_TCL); \
 	  touch $@; \
 	else false; fi
 
@@ -308,7 +302,7 @@ project: $(QSF_DONE) ## Create quartus project
 
 $(QSF_DONE): $(PROJ_TCL) $(GIT_INFO_FILE) | $(SYNTH_DIR) $(DONE_DIR)
 	@-rm -f $(PROJECT).qpf $(PROJECT).qsf
-	@$(SCRIPTS)/run_print_warn_and_err.sh \
+	@$(BUILD_SCRIPTS)/run_print_warn_and_err.sh \
 	 "Generating Quartus project files" \
 	"$(QSH) -t $(PROJ_TCL)" $(BLOG_DIR)/build_qsf.log
 	@touch $@
@@ -334,7 +328,7 @@ ifdef GIT_REPO
 	@-git config user.name > $@
 	@-echo $(shell whoami)@$(shell hostname):$(shell pwd) >> $@
 	@-echo "source repo   : $$(git rev-parse HEAD)" >> $@
-	@-cd $(BUILD_PATH) && echo "hdl_build repo: $$(git rev-parse HEAD)" >> $(abspath $@)
+	@-cd $(HDL_BUILD_PATH) && echo "hdl_build repo: $$(git rev-parse HEAD)" >> $(abspath $@)
 	@-git status >> $@
 	@-git diff -b >> $@
 	@-git diff -b --cached >> $@
@@ -359,7 +353,7 @@ $(DONE_DIR)/qgen_ip.done: $(IP_MK)
 .PHONY: elab_synth
 elab_synth: $(DONE_DIR)/elab_synth.done $(post_qgen_ip_hook) ## Quartus analysis and elaboration
 $(DONE_DIR)/elab_synth.done: $(DONE_DIR)/qgen_ip.done
-	@$(SCRIPTS)/run_print_err_only.sh \
+	@$(BUILD_SCRIPTS)/run_print_err_only.sh \
 	   "$O Elaborating (started $(DATE)) $C (see $(BLOG_DIR)/build_elaboration.log)" \
 	   "$(QMAP) --analysis_and_elaboration $(MAP_ARGS) $(PROJECT)" \
 	   $(BLOG_DIR)/build_elaboration.log
@@ -371,7 +365,7 @@ map: $(DONE_DIR)/merge.done ## Quartus synthesis/mapping
 
 $(DONE_DIR)/map.done: $(DONE_DIR)/qgen_ip.done $(post_qgen_ip_hook)
 	$(STP_CHECK)
-	@$(SCRIPTS)/run_print_err_only.sh \
+	@$(BUILD_SCRIPTS)/run_print_err_only.sh \
 	   "$O Synthesis (started $(DATE)) $C (see $(BLOG_DIR)/build_map.log)" \
 	   "$(QMAP) $(MAP_ARGS) $(PROJECT)" \
 	   $(BLOG_DIR)/build_map.log
@@ -384,7 +378,7 @@ ifeq ($(PRO_VERSION),pro)
 	@touch $@
 else
   $(DONE_DIR)/merge.done: $(DONE_DIR)/map.done
-	@$(SCRIPTS)/run_print_err_only.sh \
+	@$(BUILD_SCRIPTS)/run_print_err_only.sh \
 	   "$O Partition Merge $C (see $(BLOG_DIR)/build_partition.log)" \
 	   "$(QPART) $(QPART_ARGS) $(PROJECT) -c $(TOP)" \
 	   $(BLOG_DIR)/build_partition.log
@@ -395,7 +389,7 @@ endif
 .PHONY: fit
 fit: $(DONE_DIR)/fit.done ## Quartus fit
 $(DONE_DIR)/fit.done: $(DONE_DIR)/merge.done $(ABSPATH_SDC_FILE)
-	@$(SCRIPTS)/run_print_err_only.sh \
+	@$(BUILD_SCRIPTS)/run_print_err_only.sh \
 	   "$O Fit (started $(DATE)) $C (see $(BLOG_DIR)/build_fit.log)" \
 	   "$(QFIT) $(FIT_ARGS) $(PROJECT)" \
 	   $(BLOG_DIR)/build_fit.log
@@ -403,7 +397,7 @@ $(DONE_DIR)/fit.done: $(DONE_DIR)/merge.done $(ABSPATH_SDC_FILE)
 
 
 define do-asm =
-@$(SCRIPTS)/run_print_err_only.sh \
+@$(BUILD_SCRIPTS)/run_print_err_only.sh \
    "$O Building SOF file (started $(DATE)) $C (see $(BLOG_DIR)/build_asm.log)" \
    "$(QASM) $(ASM_ARGS) $(PROJECT)" \
    $(BLOG_DIR)/build_asm.log
@@ -418,7 +412,7 @@ $(DONE_DIR)/asm.done: $(DONE_DIR)/fit.done
 .PHONY: timing
 timing: $(DONE_DIR)/timing.done ## Quartus timing (no assembler)
 $(DONE_DIR)/timing.done: $(DONE_DIR)/fit.done $(TIMEQUEST_RPT_GEN)
-	@$(SCRIPTS)/run_print_err_only.sh \
+	@$(BUILD_SCRIPTS)/run_print_err_only.sh \
 	   "$O Analyzing timing (started $(DATE)) $C (see $(BLOG_DIR)/build_sta.log)" \
 	   "$(QSTA) $(STA_ARGS) $(PROJECT)" \
 	   $(BLOG_DIR)/build_sta.log
@@ -426,7 +420,7 @@ $(DONE_DIR)/timing.done: $(DONE_DIR)/fit.done $(TIMEQUEST_RPT_GEN)
 
 
 # Parse and store timing report information
-TIMING_RPT_CMD := $(SCRIPTS)/timing_report_gen.sh $(BLD_DIR) $(TIMING_RPT_FILE)
+TIMING_RPT_CMD := $(HDL_BUILD_PATH)/intel/timing_report_gen.sh $(BLD_DIR) $(TIMING_RPT_FILE)
 
 .PHONY: gen_timing_rpt
 gen_timing_rpt: $(TIMING_RPT_FILE)
@@ -449,7 +443,7 @@ run_timing_rpt: | $(SYNTH_DIR)  ## Generate TQ_timing_report.txt
 fit_timing: $(DONE_DIR)/fit_timing.done ## Run fit until timing is made
 $(DONE_DIR)/fit_timing.done: $(DONE_DIR)/merge.done
 	@echo -e "$O Timing Fit, $(NUM_TIMING_TRIES) tries (started $(DATE)) $C"
-	@$(SCRIPTS)/make_timing_fit.py $(SYNTH_DIR) $(PROJECT) $(DONE_DIR)/map.done -n $(NUM_TIMING_TRIES)
+	@$(HDL_BUILD_PATH)/intel/timing_rerun.py $(SYNTH_DIR) $(PROJECT) $(DONE_DIR)/map.done -n $(NUM_TIMING_TRIES)
 	@touch $(DONE_DIR)/fit.done
 	@touch $(DONE_DIR)/timing.done
 	@touch $@

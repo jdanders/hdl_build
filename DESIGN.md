@@ -140,7 +140,7 @@ The first statement compares the current variable value against the recorded fil
     * If the variable is set (value has been updated), the dependency `$(PARAMETER_DONE).tmp` will run and cause the `$(PARAMETER_DONE)` rule to run as a result.
         * The `$(PARAMETER_DONE)` file gets updated so all targets dependent on that file run again.
 
-# Questa architecture
+# Questa/Modelsim architecture
 
 Simulation requires modules and packages compilation, headers file inclusion, and script generation to execute the simulator.
 
@@ -263,8 +263,6 @@ A full tool makefile needs to define its own dependency `.d` and output `.o` rul
 ```make
 #-*- makefile -*-
 #--- NewTool build rules: ## ----------------
-
-include $(BUILD_PATH)/make/color.mk
 
 # Build dependencies for NEWTOOL_SUBSTITUTIONS variable
 # Compare against old results, and force update if different

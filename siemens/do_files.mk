@@ -17,7 +17,7 @@ if {[file size autobackup_run_wave_maybe.do] > 1500} {
 }
 
 quit -sim
-vsim -i $(VSIM_PARAMS) $(DEFAULT_SIM_LIB) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(SIM_LIB_DIR)/$(TOP_TB).$(TOP_TB)_opt
+vsim -i $(VSIM_PARAMS) $(DEFAULT_SIM_LIB) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(SIM_LIB_DIR)/$(TOP_TB).$(TOP_COMP)
 
 endef
 
@@ -59,14 +59,14 @@ endef
 define batch
 #!/bin/bash
 
-vsim $(VSIM_PARAMS) $(DEFAULT_SIM_LIB) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(BATCH_OPTIONS) $(SIM_LIB_DIR)/$(TOP_TB).$(TOP_TB)_opt
+vsim $(VSIM_PARAMS) $(DEFAULT_SIM_LIB) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(BATCH_OPTIONS) $(SIM_LIB_DIR)/$(TOP_TB).$(TOP_COMP)
 
 endef
 
 define elab
 #!/bin/bash
 
-vsim $(VSIM_PARAMS) $(DEFAULT_SIM_LIB) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(ELAB_OPTIONS) $(SIM_LIB_DIR)/$(TOP_TB).$(TOP_TB)_opt
+vsim $(VSIM_PARAMS) $(DEFAULT_SIM_LIB) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(ELAB_OPTIONS) $(SIM_LIB_DIR)/$(TOP_TB).$(TOP_COMP)
 
 endef
 

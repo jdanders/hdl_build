@@ -23,12 +23,12 @@ endif
 SHELL = /bin/bash
 
 # SRC_BASE_DIR is the directory to search for source files
-BUILD_PATH := $(abspath $(lastword $(MAKEFILE_LIST))/../..)
-SCRIPTS := $(BUILD_PATH)/scripts
-include $(BUILD_PATH)/make/color.mk
+HDL_BUILD_PATH := $(abspath $(lastword $(MAKEFILE_LIST))/..)
+BUILD_SCRIPTS := $(HDL_BUILD_PATH)/build
+include $(BUILD_SCRIPTS)/color.mk
 
 # In git repo?
-GIT_ROOT := $(shell $(SCRIPTS)/git_root_path)
+GIT_ROOT := $(shell $(BUILD_SCRIPTS)/git_root_path)
 ifneq (Could not find git root path,$(GIT_ROOT))
   GIT_REPO := $(GIT_ROOT)
 endif
@@ -40,9 +40,6 @@ endif
 # set IGNORE_DIRS in upper makefile
 # `touch .ignore_build_system` in a directory that should be ignored
 IGNORE_FILE := .ignore_build_system
-
-# List of source makefiles not in the bld directory
-SRC_MAKEFILES = $(filter-out $(BLD_DIR)/%,$(MAKEFILE_LIST))
 
 
 ##################### Directory targets ##############################
@@ -77,14 +74,28 @@ $(predependency_hook): | $(DONE_DIR) ## hook to run before dependency
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
 
-##################### Include other build modules ##############################
+##################### include other build modules ##############################
 
-include $(BUILD_PATH)/make/questa.mk
-include $(BUILD_PATH)/make/quartus.mk
+-include $(HDL_BUILD_PATH)/default_sim.mk
+-include $(HDL_BUILD_PATH)/default_synth.mk
+ifdef SIM_TOOL
+ifeq (modelsim,$(findstring modelsim,$(SIM_TOOL)))
+include $(HDL_BUILD_PATH)/siemens/modelsim.mk
+else ifeq (questa,$(findstring questa,$(SIM_TOOL)))
+include $(HDL_BUILD_PATH)/siemens/questa.mk
+endif
+endif
+ifdef SIM_TOOL
+ifeq (quartus,$(findstring quartus,$(SYNTH_TOOL)))
+include $(HDL_BUILD_PATH)/intel/quartus.mk
+else ifeq (vivado,$(findstring vivado,$(SYNTH_TOOL)))
+include $(HDL_BUILD_PATH)/xilinx/vivado.mk
+endif
+endif
 # addon make files are not included in hdl_build, but are included in local git
--include $(wildcard $(BUILD_PATH)/make/*_addon.mk)
+-include $(wildcard $(HDL_BUILD_PATH)/*_addon.mk)
 # custom make files are not included in git, customize this repo
--include $(wildcard $(BUILD_PATH)/make/*_custom.mk)
+-include $(wildcard $(HDL_BUILD_PATH)/*_custom.mk)
 
 
 ##################### Module discovery targets ##############################
@@ -97,7 +108,7 @@ ifdef EXTRA_DIRS
   EXTRA_PARAM := --extradirs '$(EXTRA_DIRS)'
 endif
 
-MAKEDEPEND_CMD := $(SCRIPTS)/build_dependency_files.py $(EXTRA_PARAM) --ignorefile $(IGNORE_FILE) $(IGNORE_PARAM) $(SRC_BASE_DIR) $(DEP_DIR)
+MAKEDEPEND_CMD := $(BUILD_SCRIPTS)/build_dependency_files.py $(EXTRA_PARAM) --ignorefile $(IGNORE_FILE) $(IGNORE_PARAM) $(SRC_BASE_DIR) $(DEP_DIR)
 
 
 ##################### Cleaning targets ##############################
@@ -119,6 +130,8 @@ nuke: cleanall ## alias for cleanall
 
 
 ##################### Helper targets ##############################
+# List of source makefiles not in the bld directory
+SRC_MAKEFILES = $(filter-out $(BLD_DIR)/%,$(MAKEFILE_LIST))
 
 # A target that lists all targets.
 .PHONY: list_targets

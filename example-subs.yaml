@@ -1,0 +1,10 @@
+# -*- yaml -*-
+
+modulename: path/off/SRC_BASE_DIR/modulev1.sv
+# Empty assignment means leave module out of project
+bad_mod:
+
+# Include other yaml files
+include:
+  - chip/a10_substitutions.yml
+  - chip/s10_substitutions.yml

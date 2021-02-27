@@ -1,9 +1,4 @@
 #-*- makefile -*-
-#--- Questa build rules: ## ----------------
-DEFAULT_SIM_TOOL := questa_10.7
-ifndef SIM_TOOL
-  SIM_TOOL := $(DEFAULT_SIM_TOOL)
-endif
 
 # Use this rule in a Makefile to force a recipe to execute before libraries
 presimlib_hook := $(DONE_DIR)/presimlib_hook.done
@@ -20,60 +15,6 @@ presim_hook := $(DONE_DIR)/presim_hook.done
 $(presim_hook): | $(DONE_DIR) ## hook to run before starting sim
 	@touch $@
 
-SIM_SUB_DONE := $(DONE_DIR)/sim_substitutions.done
-
-include $(BUILD_PATH)/make/color.mk
-
-# To print variables that need full dependency includes
-# for example: make printquesta-SIM_LIB_LIST
-.PHONY: printquesta-%
-printquesta-%: ## use 'make printquesta-VAR_NAME' to print variable after questa processing
-	@echo '$* = $($*)'
-
-
-##################### Module dependency targets ##############################
-
-MAKEDEP_TOOL_QUESTA := "questa"
-ifdef SIM_SUBSTITUTIONS
-  SUBS_QUESTA := --subsfilelist '$(SIM_SUBSTITUTIONS)'
-endif
-
-# The .d (dependent) targets are to calculate the dependencies of a file
-# The .d recipe is run whenever the sv file changes
-# The sv dependency is added in the .d file itself
-# The '%' becomes the module name
-# The '$*' is replaced by that module name
-$(DEP_DIR)/%.questa.d: $(SIM_SUB_DONE) $(predependency_hook) | $(DEP_DIR) $(BLOG_DIR)
-	@if [ -d "$(SRC_BASE_DIR)" ]; then\
-	  $(SCRIPTS)/run_full_log_on_err.sh  \
-	   "$(CLEAR)Identifying dependencies for $*$(UPDATE)" \
-	   "$(MAKEDEPEND_CMD) $(SUBS_QUESTA) $(MAKEDEP_TOOL_QUESTA) $*" \
-	   $(BLOG_DIR)/dependency_$*_questa.log; \
-	else \
-	  echo -e "$(RED)Could not find SRC_BASE_DIR$(NC)"; false; \
-	fi
-
-
-##################### Include top level ##############################
-
-# targets: grep lines that have ':', remove cleans, sed drop last character
-# Extract all targets for sim:
-QUESTA_TARGETS := $(shell grep -oe "^[a-z].*:" $(BUILD_PATH)/make/questa.mk | grep -v clean | grep -v nuke | sed 's/:.*//')
-
-# When the top .d file is included, make can't do anything until built.
-# Make sure it's included only when needed to avoid doing extra work
-SIM_DEPS := $(filter $(QUESTA_TARGETS),$(MAKECMDGOALS))
-ifneq (,$(SIM_DEPS))
-  # The top .d file must be called out specifically to get the ball rolling
-  # Otherwise nothing happens because there are no matches to the wildcard rule
-  ifndef TOP_TB
-    $(error No TOP_TB module defined)
-  endif
-  ifdef	TOP_TB
-    -include $(DEP_DIR)/$(TOP_TB).questa.d
-  endif
-endif
-
 
 ##################### Simulation Parameters ##############################
 
@@ -82,28 +23,13 @@ TRANSCRIPT := $(BLD_DIR)/transcript
 SIM_LIB_DIR := $(BLD_DIR)/simlib
 WORK := $(SIM_LIB_DIR)/work
 PARAMETER_DONE := $(DONE_DIR)/parameters.done
-VOPT_DONE := $(DONE_DIR)/vopt.done
-SIM_SEED := 13541
+SIM_SEED := 9149
 RUN_SCRIPT := $(BLD_DIR)/run.do
 BATCH_SCRIPT := $(BLD_DIR)/batch.do
 REDO_SCRIPT := $(BLD_DIR)/redo.do
 
 $(SIM_LIB_DIR):
 	@mkdir -p $(SIM_LIB_DIR)
-
-
-# Python cosim
-CONFIG_UTIL := python3-config
-DPI_OPTIONS := $(shell $(CONFIG_UTIL) --cflags)
-# Python 3.8 made getting ldflags complicated
-# https://docs.python.org/3/whatsnew/3.8.html#debug-build-uses-the-same-abi-as-release-build
-# Pre 3.8 python returned the `lpython` flag without --embed
-LD_TEST := $(shell $(CONFIG_UTIL) --ldflags)
-ifeq ($(findstring lpython,$(LD_TEST)),lpython)
-  VSIM_LDFLAGS := -ldflags "$(LD_TEST)"
-else
-  VSIM_LDFLAGS := -ldflags "$(shell $(CONFIG_UTIL) --ldflags --embed)"
-endif
 
 MS_INI_PARAM := -modelsimini $(MS_INI)
 
@@ -116,7 +42,7 @@ MS_INI_PARAM := -modelsimini $(MS_INI)
 #   before written in always_comb or always @* block".
 # Disable warnings about "Too few port connections" and "Some checking for
 #   conflicts with always_comb and always_latch variables not yet supported."
-VLOG_PARAMS := $(VLOG_OPTIONS) $(MS_INI_PARAM) +initreg+0 +initmem+0 -error 2182 +nowarnSVCHK $(UVM_DPILIB_VLOG_OPT) $(VLOG_COVER_OPT) +define+WIRE= +define+USE_GREG_BFM=1 +define+BLD_DIR=$(BLD_DIR)
+VLOG_PARAMS := $(VLOG_OPTIONS) $(MS_INI_PARAM) +initreg+0 +initmem+0 -error 2182 +nowarnSVCHK $(UVM_DPILIB_VLOG_OPT) $(VLOG_COVER_OPT) +define+WIRE= $(MSIM_VOPT)
 
 SUPRESS_PARAMS := +nowarnTFMPC
 
@@ -126,17 +52,12 @@ WLF_PARAM := -wlf $(BLD_DIR)/vsim.wlf
 # set VSIM_COVER_OPT=-coverage to run a coverage test (or use smake)
 VSIM_PARAMS := -msgmode both -t 1ps -permit_unmatched_virtual_intf $(SUPRESS_PARAMS) $(WLF_PARAM) $(MS_INI_PARAM) $(VSIM_COVER_OPT) $(VSIM_OPTIONS) $(VSIM_LDFLAGS)
 
-# This part should match built-in uvm compile to avoid Warning: (vopt-10017)
-# -L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
-DEFAULT_SIM_LIB := -L floatfixlib -L ieee -L ieee_env -L mc2_lib -L mgc_ams -L modelsim_lib -L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact -L mtiPA -L osvvm -L std -L std_developerskit -L sv_std -L synopsys -L verilog -L vh_ux01v_lib -L vhdlopt_lib -L vital2000
-
 # Create list of libraries to use for vlog and vsim
 # In order to build in parallel, each module is in a separate lib
 # Use _DEPS variable and replace ' ' with ' -L ', like: -L mod1 -L mod2
 SIM_TOP_DEPS := $(sort $(strip $($(TOP_TB)_DEPS)))
 SIM_LIB_LIST := $(shell echo " $(SIM_TOP_DEPS)" | sed -E 's| +(\w)| -L \1|g') -L work $(SIM_LIB_APPEND)
 SIM_LAST_DEPS := $(SIM_LIB_DIR)/sim_top_deps
-SIM_LIB_DONE := $(DONE_DIR)/sim_lib_map
 
 # The onfinish stop makes sure we can execute commands after run -all
 # before the simulator exits.  Without that, if someone used a $finish
@@ -154,7 +75,7 @@ MAKE_PARAMS := $(filter PARAM_%,$(.VARIABLES))
 SIM_PARAM := $(foreach pname, $(MAKE_PARAMS),-G$(subst PARAM_,,$(pname))=$($(pname)))
 
 # Compare against old results, and force update if different
-ifeq ($(shell $(SCRIPTS)/variable_change.sh "$(SIM_PARAM)" $(PARAMETER_DONE)),yes)
+ifeq ($(shell $(BUILD_SCRIPTS)/variable_change.sh "$(SIM_PARAM)" $(PARAMETER_DONE)),yes)
 SIM_PARAM_DEP=$(PARAMETER_DONE).tmp
 endif
 
@@ -174,7 +95,7 @@ $(MS_INI): $(SRC_MAKEFILES) | $(BLD_DIR) $(SIM_LIB_DIR)
 	@echo;echo -e "$O Creating sim environment $C"
 	@if [ -f $(TOOL_MODELSIM.INI) ]; then \
 	  cp $(TOOL_MODELSIM.INI) $(MS_INI); \
-	else echo -e "$(RED)Could not find Questa install modelsim.ini$(NC)"; false; \
+	else echo -e "$(RED)Could not find installed modelsim.ini$(NC)"; false; \
 	fi
 	@chmod +w $(MS_INI)
 	@rm -rf $(WORK) && vlib $(WORK)
@@ -184,7 +105,7 @@ $(MS_INI): $(SRC_MAKEFILES) | $(BLD_DIR) $(SIM_LIB_DIR)
 
 # Maintain the sim libraries: create and map in $(MS_INI) in parallel safe way
 # Watch for changes in dependenies and force update upon change
-ifeq ($(shell $(SCRIPTS)/variable_change.sh "$(SIM_TOP_DEPS)" $(SIM_LAST_DEPS)),yes)
+ifeq ($(shell $(BUILD_SCRIPTS)/variable_change.sh "$(SIM_TOP_DEPS)" $(SIM_LAST_DEPS)),yes)
 NEW_SIM_DEPS=$(SIM_LAST_DEPS).tmp
 endif
 $(SIM_LAST_DEPS).tmp: | $(SIM_LIB_DIR)
@@ -231,7 +152,7 @@ $(SIM_LIB_DONE): $(MS_INI) $(SIM_LIB_DIR)/maps_made | $(SIM_LIB_DIR)
 
 # Build dependencies for SIM_SUBSTITUTIONS variable
 # Compare against old results, and force update if different
-ifeq ($(shell $(SCRIPTS)/variable_change.sh "$(SIM_SUBSTITUTIONS)" $(SIM_SUB_DONE)),yes)
+ifeq ($(shell $(BUILD_SCRIPTS)/variable_change.sh "$(SIM_SUBSTITUTIONS)" $(SIM_SUB_DONE)),yes)
 SIMSUB_DEP=$(SIM_SUB_DONE).tmp
 endif
 
@@ -246,48 +167,10 @@ $(SIM_SUB_DONE): $(SIMSUB_DEP)
 	@touch $@
 
 
-##################### Dependency targets ##############################
-# Create rules to determine dependencies and create compile recipes for .sv
-.PHONY: deps
-deps: $(DEP_DIR)/$(TOP_TB).questa.d ## Figure out sim dependencies only
-.PHONY: comp
-comp: $(MS_INI) $(DEP_DIR)/$(TOP_TB).questa.o $(precomp_hook) ## Compile simulation files
-.PHONY: vopt
-vopt: comp $(VOPT_DONE) ## Perform vopt after compile
-.PHONY: filelist_sim
-filelist_sim: $(DEP_DIR)/$(TOP_TB).questa.d ## print list of files used in sim
-	@grep "\.d:" $(DEP_DIR)/* | cut -d " " -f 2 | sort | uniq
-.PHONY: modules_sim
-modules_sim: $(DEP_DIR)/$(TOP_TB).questa.d ## print list of modules used in sim
-	@echo $(SIM_TOP_DEPS)
-
-# TODO: On some simulations, vopt fails the first time. FIXME!
-# for example: cedarbreaks/tie_fpga/tie_system_sim/build_bad_ip_frag
-VOPT_CMD := "vopt -sv -work $(SIM_LIB_DIR)/$(TOP_TB) $(VOPT_PARAMS) $(DEFAULT_SIM_LIB) $(SIM_LIB_LIST) $(SIM_PARAM) $(SIM_LIB_DIR)/$(TOP_TB).$(TOP_TB) -o $(TOP_TB)_opt"
-VOPT_MSG := "$O Optimizing design $C (see $(BLOG_DIR)/vopt.log)"
-
-$(VOPT_DONE): $(DEP_DIR)/$(TOP_TB).questa.o $(PARAMETER_DONE) | $(DONE_DIR)
-	@$(SCRIPTS)/run_print_warn_and_err.sh $(VOPT_MSG) $(VOPT_CMD) $(BLOG_DIR)/vopt.log \
-	 || (echo -e "$O Only a problem if second vopt attempt fails... $C" && $(SCRIPTS)/run_print_warn_and_err.sh  $(VOPT_MSG) $(VOPT_CMD) $(BLOG_DIR)/vopt.log)
-	@touch $(VOPT_DONE)
-
-
-# The .o (out) rules are to mark that the file has been compiled
-# The .o recipe is used to compile all files
-# The source file dependency is added in the .d file
-# The "$*" is replaced with the stem, which is the module name
-# The "$(word 2,$^)" is the second dependency, which will be the sv filename
-# Every '.o' tool rule set needs to be added to build.mk
-$(DEP_DIR)/%.questa.o: $(SIM_LIB_DONE) | $(DEP_DIR) $(BLOG_DIR)
-	@if [ ! -f $(DEP_DIR)/$*.questa.d ]; then echo -e "$(RED)Dependency .d file missing for $*$(NC)"; exit 1; fi
-	@$(SCRIPTS)/run_questa.sh $* $(word 2,$^) $(BLOG_DIR)
-	@touch $@
-
-
 ##################### Do script targets ##############################
-include $(BUILD_PATH)/make/do_files.mk
+include $(HDL_BUILD_PATH)/siemens/do_files.mk
 .PHONY: sim
-sim: vopt $(presim_hook) ## Run simulation in GUI
+sim: $(PRESIM_GOAL) $(presim_hook) ## Run simulation in GUI
 	@printf "$(run_str)" > $(RUN_SCRIPT)
 	@printf '$(redo_str)' > $(REDO_SCRIPT)
 	@echo -e "$O Starting simulation $C"
@@ -295,20 +178,20 @@ sim: vopt $(presim_hook) ## Run simulation in GUI
 
 
 .PHONY: elab_sim
-elab_sim: vopt $(presim_hook) ## Run elaboration batch
+elab_sim: $(PRESIM_GOAL) $(presim_hook) ## Run elaboration batch
 	@printf "$(elab_str)" > $(BATCH_SCRIPT)
 	@chmod +x $(BATCH_SCRIPT)
 	@echo -e "$O Starting batch simulation $C (see $(BLOG_DIR)/batch.log)"
-	@$(SCRIPTS)/run_full_log_on_err.sh "./$(BATCH_SCRIPT)" \
+	@$(BUILD_SCRIPTS)/run_full_log_on_err.sh "./$(BATCH_SCRIPT)" \
 	 "./$(BATCH_SCRIPT)" "$(BLOG_DIR)/batch.log"
 
 
 .PHONY: batch
-batch: vopt $(presim_hook) ## Run simulation batch
+batch: $(PRESIM_GOAL) $(presim_hook) ## Run simulation batch
 	@printf "$(batch_str)" > $(BATCH_SCRIPT)
 	@chmod +x $(BATCH_SCRIPT)
 	@echo -e "$O Starting batch simulation $C (see $(BLOG_DIR)/batch.log)"
-	@if $(SCRIPTS)/run_full_log_on_err.sh "./$(BATCH_SCRIPT)" \
+	@if $(BUILD_SCRIPTS)/run_full_log_on_err.sh "./$(BATCH_SCRIPT)" \
 	    "./$(BATCH_SCRIPT)" "$(BLOG_DIR)/batch.log" ; then \
 	   if grep "+-+- Sim Finished -+-+" $(BLOG_DIR)/batch.log > /dev/null; then \
 	     echo -e "$(GREEN)# Simulation successful $C"; \
@@ -318,15 +201,15 @@ batch: vopt $(presim_hook) ## Run simulation batch
 
 
 .PHONY: clean
-clean: clean_questa
-.PHONY: clean_questa
-clean_questa:
+clean: clean_siemens
+.PHONY: clean_siemens
+clean_siemens:
 	@rm -rf $(RUN_SCRIPT) $(BATCH_SCRIPT) $(REDO_SCRIPT) $(SIM_LIB_DIR) $(WORK) certe_dump.xml
 	@if [[ "$(MAKECMDGOALS)" == *comp* ]]; then make --no-print-directory -r $(DEP_DIR)/$(TOP_TB).d; fi
 
 .PHONY: cleanall
-cleanall: cleanall_questa
-.PHONY: cleanall_questa
-cleanall_questa:
+cleanall: cleanall_siemens
+.PHONY: cleanall_siemens
+cleanall_siemens:
 #	@rm -rf $(ALTERA_SIM_LIBS)
 	@rm -f $(MS_INI) transcript autobackup*.do vsim_stacktrace.vstf

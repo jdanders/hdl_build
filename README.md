@@ -14,17 +14,18 @@ To get started
 * copy the `example.mk` file to your project build directory and rename it to `Makefile`
 * edit `Makefile` to have the correct simulation top module name as `TOP_TB` and/or correct synthesis top module name as `TOP`
 * run `make sim` or `make synth`
-* you will probably need to tweak the `DEFAULT_SYNTH_TOOL` in `quartus.mk` to match your environment
+* to choose a global default tool, edit `default_sim.mk` or `default_synth.mk`, or locally set `SIM_TOOL` and/or `SYNTH_TOOL` in your makefile
+* synthesis projects also need `FAMILY` and `DEVICE` set
 
 See the full makefile examples for adding other features to your project Makefile.
 
-To add new makefiles that are not upstreamed, create *_addon.mk or *_custom.mk makefiles in the `make` directory.
+To add new makefiles that are not upstreamed, create *_addon.mk or *_custom.mk makefiles in the base directory.
 
 # Software Requirements
 
-This build system depends on Intel Quartus and Mentor Questa for synthesis and simulation. Other tools could be added.
+This build system depends on Intel Quartus and Siemens Questa or Modelsim for synthesis and simulation. Other tools could be added.
 
-Mentor Questa needs to be in the path, and the default `modelsim.ini` file will be copied from the detected install path.
+The `vsim` command needs to be in the path for simulation, and the default `modelsim.ini` file will be copied from the detected install path.
 
 Quartus synthesis requires two variables in the use Makefile to create a project:
 
@@ -53,12 +54,10 @@ Module and include dependencies are automatically determined.
 
 ## Including build system
 
-The build system `hdl_build` directory should be placed at the top level of your HDL git repository. This could be as a git submodule, or just copied over.
-
 The build system can be included in a local Makefile with the following include line in the makefile:
 
 ```make
-include /path/to/hdl_build/make/build.mk
+include /path/to/hdl_build/build.mk
 ```
 
 ## Build structure
@@ -69,7 +68,7 @@ The **`build.mk`** file provides the entry point and the basic structure for the
 
 * Variables
     * **`SRC_BASE_DIR`** must be set if not in git and holds the path of the directory that holds all source code.
-    * **`GIT_REPO`** will be defined if being run from a git repository, and will hold the git root directory (same as SRC_BASE_DIR if in git repo)
+    * **`GIT_REPO`** will be defined if being run from a git repository (use with make's `ifdef` to detect if in repo), and will hold the git root directory (same as SRC_BASE_DIR if in git repo)
     * **`BLD_DIR`** variable sets the name of the result directory of the build system.
     * **`EXTRA_DIRS`** variable: a list of space delineated directory names to add during dependency search. This is only useful for directories normally ignored by the build system or a directory outside the SRC_BASE_DIR directory.
     * **`IGNORE_DIRS`** variable: a list of space delineated directory names to ignore during dependency search.
@@ -85,9 +84,9 @@ The **`build.mk`** file provides the entry point and the basic structure for the
 * Hooks
     * **`$(predependency_hook)`**: by adding a dependency the `$(predependency_hook)` target, calling Makefiles can insert recipes prior to dependency analysis
 
-### questa.mk
+### modelsim.mk or questa.mk
 
-The **`questa.mk`** file provides Questa simulator related targets and consumes the dependency analysis results of **`build.mk`**.
+The **`modelsim.mk`** or **`questa.mk`** file provides Questa simulator related targets and consumes the dependency analysis results of **`build.mk`**.
 
 * Variables
     * **`TOP_TB`** is the top level module name
@@ -99,7 +98,7 @@ The **`questa.mk`** file provides Questa simulator related targets and consumes 
     * **`VLOG_OPTIONS`** and will pass the provided options to each vlog command
     * **`VLOG_COVER_OPT`** and will pass the provided options to each vlog command
     * **`UVM_DPILIB_VLOG_OPT`** and will pass the provided options to each vlog command
-    * **`VOPT_OPTIONS`** and will pass the provided options to the vopt command
+    * **`VOPT_OPTIONS`** and will pass the provided options to the vopt command (questa only)
     * **`VSIM_OPTIONS`** and will pass the provided options to the vsim command
     * **`VSIM_COVER_OPT`** and will pass the provided options to the vsim command
     * **`COV_COMMANDS`** and will pass the commands to the batch command
@@ -113,9 +112,9 @@ The **`questa.mk`** file provides Questa simulator related targets and consumes 
     * **`batch`** run simulation script without GUI
     * **`filelist_sim`** list all files used in compilation
     * **`modules_sim`** list all modules detected in simulation
-    * **`clean_questa`** recipe for target **`clean`**.
-    * **`cleanall_questa`** recipe for target **`cleanall`**.
-    * **`printquesta-%`** print variables that need questa-related processing to have meaning.
+    * **`clean_siemens`** recipe for target **`clean`**.
+    * **`cleanall_siemens`** recipe for target **`cleanall`**.
+    * **`printmodelsim-%`** or **`printquesta-%`** print variables that need questa-related processing to have meaning.
 * Hooks
     * **`$(presimlib_hook)`**: hook for inserting recipes before generating simulation libraries
     * **`$(precomp_hook)`**: hook for inserting recipes before starting module compilation
@@ -176,11 +175,11 @@ The **`quartus.mk`** file provides Quartus related targets and consumes the depe
 
 # Outside of git
 
-If you want to use this outside of a git repository, you will need to set the sourc path to search in your Makefile, like this:
+If you want to use this outside of a git repository, you will need to set the source path to search in your Makefile, like this:
 
 ```make
 SRC_BASE_DIR := /path/to/current/src_base_dir
-TOP_TB = sandbox_module
+TOP_TB = test_mod
 
-include $(BUILD_PATH)/make/build.mk
+include $(BUILD_PATH)/build.mk
 ```
