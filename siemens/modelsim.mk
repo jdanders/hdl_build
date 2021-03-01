@@ -9,6 +9,7 @@ printmodelsim-%: ## use 'make printmodelsim-VAR_NAME' to print variable after mo
 
 SIM_LIB_DONE := $(DONE_DIR)/sim_lib_map
 SIM_SUB_DONE := $(DONE_DIR)/sim_substitutions.done
+SIM_LIB_DIR := $(BLD_DIR)/simlib
 
 
 ##################### Module dependency targets ##############################
@@ -62,6 +63,22 @@ SUPRESS_PARAMS := +nowarnTFMPC
 MSIM_VOPT := $(SUPRESS_PARAMS) $(strip +acc $(VOPT_OPTIONS))
 
 DEFAULT_SIM_LIB :=
+
+MS_INI := $(BLD_DIR)/modelsim.ini
+MS_INI_PARAM := -modelsimini $(MS_INI)
+
+# Create list of libraries to use for vlog and vsim
+# In order to build in parallel, each module is in a separate lib
+# Use _DEPS variable and replace ' ' with ' -L ', like: -L mod1 -L mod2
+SIM_TOP_DEPS := $(sort $(strip $($(TOP_TB)_DEPS)))
+SIM_LIB_LIST := $(shell echo " $(SIM_TOP_DEPS)" | sed -E 's| +(\w)| -L \1|g') -L work $(SIM_LIB_APPEND)
+
+# Gather all PARAM_ environment variables and make a parameter string
+# First filter all variables to find all that start with PARAM_
+MAKE_PARAMS := $(filter PARAM_%,$(.VARIABLES))
+# Next change them from PARAM_NAME to NAME and grab their values
+# This takes PARAM_NAME=value and changes it to -GNAME=value
+SIM_PARAM := $(foreach pname, $(MAKE_PARAMS),-G$(subst PARAM_,,$(pname))=$($(pname)))
 
 ##################### Dependency targets ##############################
 # Create rules to determine dependencies and create compile recipes for .sv

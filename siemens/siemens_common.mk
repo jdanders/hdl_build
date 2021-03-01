@@ -18,9 +18,7 @@ $(presim_hook): | $(DONE_DIR) ## hook to run before starting sim
 
 ##################### Simulation Parameters ##############################
 
-MS_INI := $(BLD_DIR)/modelsim.ini
 TRANSCRIPT := $(BLD_DIR)/transcript
-SIM_LIB_DIR := $(BLD_DIR)/simlib
 WORK := $(SIM_LIB_DIR)/work
 PARAMETER_DONE := $(DONE_DIR)/parameters.done
 SIM_SEED := 9149
@@ -30,8 +28,6 @@ REDO_SCRIPT := $(BLD_DIR)/redo.do
 
 $(SIM_LIB_DIR):
 	@mkdir -p $(SIM_LIB_DIR)
-
-MS_INI_PARAM := -modelsimini $(MS_INI)
 
 # In order to more closely simulate hardware conditions, default all registers to '0' instead of 'X'
 # See Quartus Handbook, "Specifying a Power-Up Value" where it says
@@ -44,19 +40,10 @@ MS_INI_PARAM := -modelsimini $(MS_INI)
 #   conflicts with always_comb and always_latch variables not yet supported."
 VLOG_PARAMS := $(VLOG_OPTIONS) $(MS_INI_PARAM) +initreg+0 +initmem+0 -error 2182 +nowarnSVCHK $(UVM_DPILIB_VLOG_OPT) $(VLOG_COVER_OPT) +define+WIRE= $(MSIM_VOPT)
 
-SUPRESS_PARAMS := +nowarnTFMPC
-
-VOPT_PARAMS := $(SUPRESS_PARAMS) $(MS_INI_PARAM) $(strip +acc $(VOPT_OPTIONS))
-
 WLF_PARAM := -wlf $(BLD_DIR)/vsim.wlf
 # set VSIM_COVER_OPT=-coverage to run a coverage test (or use smake)
 VSIM_PARAMS := -msgmode both -t 1ps -permit_unmatched_virtual_intf $(SUPRESS_PARAMS) $(WLF_PARAM) $(MS_INI_PARAM) $(VSIM_COVER_OPT) $(VSIM_OPTIONS) $(VSIM_LDFLAGS)
 
-# Create list of libraries to use for vlog and vsim
-# In order to build in parallel, each module is in a separate lib
-# Use _DEPS variable and replace ' ' with ' -L ', like: -L mod1 -L mod2
-SIM_TOP_DEPS := $(sort $(strip $($(TOP_TB)_DEPS)))
-SIM_LIB_LIST := $(shell echo " $(SIM_TOP_DEPS)" | sed -E 's| +(\w)| -L \1|g') -L work $(SIM_LIB_APPEND)
 SIM_LAST_DEPS := $(SIM_LIB_DIR)/sim_top_deps
 
 # The onfinish stop makes sure we can execute commands after run -all
@@ -66,13 +53,6 @@ SIM_LAST_DEPS := $(SIM_LIB_DIR)/sim_top_deps
 BATCH_OPTIONS := -batch -do "onfinish stop; run -all; $(COV_COMMANDS); exit"
 # Elaboration should just quit as soon as it starts
 ELAB_OPTIONS := -batch -do "exit"
-
-# Gather all PARAM_ environment variables and make a parameter string
-# First filter all variables to find all that start with PARAM_
-MAKE_PARAMS := $(filter PARAM_%,$(.VARIABLES))
-# Next change them from PARAM_NAME to NAME and grab their values
-# This takes PARAM_NAME=value and changes it to -GNAME=value
-SIM_PARAM := $(foreach pname, $(MAKE_PARAMS),-G$(subst PARAM_,,$(pname))=$($(pname)))
 
 # Compare against old results, and force update if different
 ifeq ($(shell $(BUILD_SCRIPTS)/variable_change.sh "$(SIM_PARAM)" $(PARAMETER_DONE)),yes)
