@@ -277,7 +277,7 @@ $(DEP_DIR)/%.quartus.o:  $(PRO_RESULT) | $(DEP_DIR) $(BLOG_DIR) $(IP_DIR) $(TCL_
 	  if [ ! -f $(DEP_DIR)/$*.quartus.d ]; then \
 	    echo -e "$(RED)Dependency .d file missing for $*$(NC)"; false;\
 	  fi; \
-	  $(BUILD_SCRIPTS)/run_quartus.sh $* $(word 2,$^) $(BLOG_DIR) $(FILES_TCL); \
+	  $(HDL_BUILD_PATH)/intel/run_quartus.sh $* $(word 2,$^) $(BLOG_DIR) $(FILES_TCL); \
 	  touch $@; \
 	else false; fi
 

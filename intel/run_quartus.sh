@@ -16,8 +16,8 @@ svh_cmd="echo \"set_global_assignment -name SEARCH_PATH $(dirname ${modpath})\" 
 SCRIPT_PATH=$(dirname "$(readlink -f "$0")")
 # These templates have four replacements strings handled by `sed` below
 #   ipsearch, modname, modpath, and ftype
-GEN_IP_TEMPLATE=${SCRIPT_PATH}/../make/template_ip.mk
-GEN_QMW_TEMPLATE=${SCRIPT_PATH}/../make/template_qmegawiz.mk
+GEN_IP_TEMPLATE=${SCRIPT_PATH}/template_ip.mk
+GEN_QMW_TEMPLATE=${SCRIPT_PATH}/template_qmegawiz.mk
 
 
 # Qsys files need to be copied, modified for Pro tool, added to IP_MK/QSF files
@@ -113,4 +113,4 @@ echo -n "$0 " > ${logfile}.cmds
 printf "'%s' " "$@" >> ${logfile}.cmds
 echo -e "\n" >> ${logfile}.cmds
 
-${SCRIPT_PATH}/pretty_run.sh "${msg}" "${cmd}" "${logfile}" "${truecmd}" "${falsecmd}"
+${SCRIPT_PATH}/../build/pretty_run.sh "${msg}" "${cmd}" "${logfile}" "${truecmd}" "${falsecmd}"

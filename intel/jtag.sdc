@@ -1,4 +1,16 @@
 # From timing cookbook: https://www.intel.com/content/dam/www/programmable/us/en/pdfs/literature/manual/mnl_timequest_cookbook.pdf
+
+# Made one change because the cable delay seemed ridiculous.
+# 11.627 ns of delay allows for around 6 feet of cabling from blaster to FPGA
+# All appearances of cable_delay_max and cable_delay_min are changed lines
+proc get_cable_delay_max { } {
+   return 2
+}
+
+proc get_cable_delay_min { } {
+   return 1
+}
+
 # Search "---customize here---" for the few decisions you need to make
 #
 # By default, the most challenging timing spec is applied to work in
@@ -97,7 +109,9 @@ proc set_tck_timing_spec { } {
 
 proc get_tck_delay_max { } {
     set tck_blaster_tco_max 14.603
-    set tck_cable_max 11.627
+    #set tck_cable_max 11.627
+    set tck_cable_max [get_cable_delay_max]
+
     # tck delay on the PCB depends on the trace length from JTAG 10-pin
      # header to FPGA on board. In general on the PCB, the signal travels
      # at the speed of ~160 ps/inch (1000 mils = 1 inch).
@@ -108,7 +122,8 @@ proc get_tck_delay_max { } {
 
 proc get_tck_delay_min { } {
     set tck_blaster_tco_min 14.603
-    set tck_cable_min 10.00
+    #set tck_cable_min 10.00
+    set tck_cable_min [get_cable_delay_min]
 
     # tck delay on the PCB depends on the trace length from JTAG 10-pin
     # header to FPGA on board. In general on the PCB, the signal travels
@@ -122,8 +137,11 @@ proc get_tck_delay_min { } {
 proc set_tms_timing_spec { } {
     set tms_blaster_tco_max 9.468
     set tms_blaster_tco_min 9.468
-    set tms_cable_max 11.627
-    set tms_cable_min 10.0
+
+    #set tms_cable_max 11.627
+    #set tms_cable_min 10.0
+    set tms_cable_max [get_cable_delay_max]
+    set tms_cable_min [get_cable_delay_min]
 
     # tms delay on the PCB depends on the trace length from JTAG 10-pin
     # header to FPGA on board. In general on the PCB, the signal travels
@@ -142,8 +160,11 @@ proc set_tms_timing_spec { } {
 proc set_tdi_timing_spec_when_driven_by_blaster { } {
     set tdi_blaster_tco_max 8.551
     set tdi_blaster_tco_min 8.551
-    set tdi_cable_max 11.627
-    set tdi_cable_min 10.0
+
+    #set tdi_cable_max 11.627
+    #set tdi_cable_min 10.0
+    set tdi_cable_max [get_cable_delay_max]
+    set tdi_cable_min [get_cable_delay_min]
 
     # tms delay on the PCB depends on the trace length from JTAG 10-pin
     # header to FPGA on board. In general on the PCB, the signal travels
@@ -185,14 +206,17 @@ proc set_tdo_timing_spec_when_drive_blaster { } {
     set tdo_blaster_tsu 5.831
     set tdo_blaster_th -1.651
 
-    set tdo_cable_max 11.627
-    set tdo_cable_min 10.0
+    #set tdo_cable_max 11.627
+    #set tdo_cable_min 10.0
+    set tdo_cable_max [get_cable_delay_max]
+    set tdo_cable_min [get_cable_delay_min]
 
     # tdi delay on the PCB depends on the trace length from JTAG 10-pin
     # header to FPGA on board. In general on the PCB, the signal travels
     # at the speed of ~160 ps/inch (1000 mils = 1 inch).
     # ---customize here---
-    set tdo_header_trace_max 0.5
+    # CUSTOM CHANGE: timing doesn't work on a Cyclone, need to reverse time
+    set tdo_header_trace_max -11.5
     set tdo_header_trace_min 0.1
 
     set tdo_out_max [expr $tdo_cable_max + $tdo_header_trace_max + $tdo_blaster_tsu + [get_tck_delay_max]]

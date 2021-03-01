@@ -102,7 +102,7 @@ modules_sim: $(DEP_DIR)/$(TOP_TB).modelsim.d ## print list of modules used in si
 # Every '.o' tool rule set needs to be added to build.mk
 $(DEP_DIR)/%.modelsim.o: $(SIM_LIB_DONE) | $(DEP_DIR) $(BLOG_DIR)
 	@if [ ! -f $(DEP_DIR)/$*.modelsim.d ]; then echo -e "$(RED)Dependency .d file missing for $*$(NC)"; exit 1; fi
-	@$(BUILD_SCRIPTS)/run_questa.sh $* $(word 2,$^) $(BLOG_DIR)
+	@$(HDL_BUILD_PATH)/siemens/run_siemens.sh $* $(word 2,$^) $(BLOG_DIR)
 	@touch $@
 
 

@@ -90,4 +90,4 @@ esc_truecmd=$(printf "%q" "$truecmd")
 esc_falsecmd=$(printf "%q" "$falsecmd")
 
 SCRIPT_PATH=$(dirname "$(readlink -f "$0")")
-${SCRIPT_PATH}/pretty_run.sh "${msg}" "${cmd}" "${logfile}" "${truecmd}" "${falsecmd}"
+${SCRIPT_PATH}/../build/pretty_run.sh "${msg}" "${cmd}" "${logfile}" "${truecmd}" "${falsecmd}"
