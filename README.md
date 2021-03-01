@@ -14,7 +14,8 @@ To get started
 * copy the `example.mk` file to your project build directory and rename it to `Makefile`
 * edit `Makefile` to have the correct simulation top module name as `TOP_TB` and/or correct synthesis top module name as `TOP`
 * run `make sim` or `make synth`
-* to choose a global default tool, edit `default_sim.mk` or `default_synth.mk`, or locally set `SIM_TOOL` and/or `SYNTH_TOOL` in your makefile
+* to choose a global default tool, create `default_sim.mk` or `default_synth.mk`, or locally set `SIM_TOOL` and/or `SYNTH_TOOL` in your makefile
+    * See `example-default_sim.mk` and `example-default_synth.mk` for templates
 * synthesis projects also need `FAMILY` and `DEVICE` set
 
 See the full makefile examples for adding other features to your project Makefile.
