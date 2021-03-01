@@ -172,6 +172,8 @@ def main(args):
                                ignorefile=args.ignorefile)
     filelist = [os.path.join(args.srcbase, ii.strip()) for ii in
                 os.popen(fcmd).readlines()]
+    # Git lists duplicates, so set filter it
+    filelist = list(set(filelist))
     ignoredirs = [os.path.dirname(f) for f in filelist if args.ignorefile in f]
     if args.ignoredirs:
         ignoredirs += [d.strip() for d in args.ignoredirs.split()]

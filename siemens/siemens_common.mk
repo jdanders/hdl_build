@@ -38,7 +38,7 @@ $(SIM_LIB_DIR):
 #   before written in always_comb or always @* block".
 # Disable warnings about "Too few port connections" and "Some checking for
 #   conflicts with always_comb and always_latch variables not yet supported."
-VLOG_PARAMS := $(VLOG_OPTIONS) $(MS_INI_PARAM) +initreg+0 +initmem+0 -error 2182 +nowarnSVCHK $(UVM_DPILIB_VLOG_OPT) $(VLOG_COVER_OPT) +define+WIRE= $(MSIM_VOPT)
+VLOG_PARAMS := $(VLOG_OPTIONS) $(MS_INI_PARAM) +initreg+0 +initmem+0 -error 2182 +nowarnSVCHK $(UVM_DPILIB_VLOG_OPT) $(VLOG_COVER_OPT) $(MSIM_VOPT)
 
 WLF_PARAM := -wlf $(BLD_DIR)/vsim.wlf
 # set VSIM_COVER_OPT=-coverage to run a coverage test (or use smake)
