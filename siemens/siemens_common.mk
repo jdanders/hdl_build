@@ -173,11 +173,8 @@ batch: $(PRESIM_GOAL) $(presim_hook) ## Run simulation batch
 	@echo -e "$O Starting batch simulation $C (see $(BLOG_DIR)/batch.log)"
 	@if $(BUILD_SCRIPTS)/run_full_log_on_err.sh "./$(BATCH_SCRIPT)" \
 	    "./$(BATCH_SCRIPT)" "$(BLOG_DIR)/batch.log" ; then \
-	   if grep "+-+- Sim Finished -+-+" $(BLOG_DIR)/batch.log > /dev/null; then \
 	     echo -e "$(GREEN)# Simulation successful $C"; \
-	   else\
-	     echo -e "$(RED)# Missing 'Sim Finished' string$C  (see $(BLOG_DIR)/batch.log)"; false;\
-	   fi; else false; fi;
+	 fi;
 
 
 .PHONY: clean
