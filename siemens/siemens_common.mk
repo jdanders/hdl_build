@@ -70,7 +70,7 @@ $(PARAMETER_DONE): $(SIM_PARAM_DEP)
 	@touch $@
 
 
-TOOL_MODELSIM.INI := $(abspath $(shell which vsim)/../../modelsim.ini)
+TOOL_MODELSIM.INI := $(abspath $(shell which vsim || echo /dev/null)/../../modelsim.ini)
 $(MS_INI): $(SRC_MAKEFILES) | $(BLD_DIR) $(SIM_LIB_DIR)
 	@echo;echo -e "$O Creating sim environment $C"
 	@if [ -f $(TOOL_MODELSIM.INI) ]; then \
