@@ -300,6 +300,7 @@ $(PROJ_TCL): $(FILES_TCL) $(PARAMETER_TCL) $(STD_V_PRO_MACRO_FILE) $(GLOBAL_SYNT
 .PHONY: project
 project: $(QSF_DONE) ## Create quartus project
 
+# Quartus updates the qsf file, so use DONE file for make dependencies
 $(QSF_DONE): $(PROJ_TCL) $(GIT_INFO_FILE) | $(SYNTH_DIR) $(DONE_DIR)
 	@-rm -f $(PROJECT).qpf $(PROJECT).qsf
 	@$(BUILD_SCRIPTS)/run_print_warn_and_err.sh \

@@ -172,8 +172,11 @@ def main():
         print("\n")
         print(f"Slack history of {args.project} is:\n-"
               + "\n-".join(slack_history))
+    worst = run(script_dir + '/timing_worst_paths.py').decode(errors='ignore')
+    print("\nMost frequent worst timing paths:")
+    for ii in worst.splitlines()[:12]:
+        print(ii)
     if timing_result:
-        worst = run(script_dir + '/timing_worst_paths.py').decode(errors='ignore')
         open(os.path.join(syn_dir, 'TQ_worst_paths.txt'), 'w').write(worst)
     else:
         print(f"Could not find timing solution after {args.num} tries")
