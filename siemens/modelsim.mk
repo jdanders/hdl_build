@@ -25,7 +25,7 @@ endif
 # The '%' becomes the module name
 # The '$*' is replaced by that module name
 $(DEP_DIR)/%.modelsim.d: $(SIM_SUB_DONE) $(predependency_hook) | $(DEP_DIR) $(BLOG_DIR)
-	@if [ -d "$(SRC_BASE_DIR)" ]; then\
+	@if [ -d $(SRC_BASE_DIR) ]; then\
 	  $(BUILD_SCRIPTS)/run_full_log_on_err.sh  \
 	   "$(CLEAR)Identifying dependencies for $*$(UPDATE)" \
 	   "$(MAKEDEPEND_CMD) $(SUBS_MODELSIM) $(MAKEDEP_TOOL_MODELSIM) $*" \
@@ -101,7 +101,7 @@ modules_sim: $(DEP_DIR)/$(TOP_TB).modelsim.d ## print list of modules used in si
 # The "$(word 2,$^)" is the second dependency, which will be the sv filename
 # Every '.o' tool rule set needs to be added to build.mk
 $(DEP_DIR)/%.modelsim.o: $(SIM_LIB_DONE) | $(DEP_DIR) $(BLOG_DIR)
-	@if [ ! -f $(DEP_DIR)/$*.modelsim.d ]; then echo -e "$(RED)Dependency .d file missing for $*$(NC)"; exit 1; fi
+	@if [ ! -f $(DEP_DIR)/$*.modelsim.d ]; then echo -e "$(RED)Dependency .d file missing for $*$(NC), missing source file?"; exit 1; fi
 	@$(HDL_BUILD_PATH)/siemens/run_siemens.sh $* $(word 2,$^) $(BLOG_DIR)
 	@touch $@
 

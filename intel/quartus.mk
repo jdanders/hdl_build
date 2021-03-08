@@ -62,7 +62,7 @@ endif
 # The '%' becomes the module name
 # The '$*' is replaced by that module name
 $(DEP_DIR)/%.quartus.d: $(SYNTH_SUB_DONE) $(predependency_hook) | $(DEP_DIR) $(BLOG_DIR)
-	@if [ -d "$(SRC_BASE_DIR)" ]; then\
+	@if [ -d $(SRC_BASE_DIR) ]; then\
 	  $(BUILD_SCRIPTS)/run_full_log_on_err.sh  \
 	   "Identifying dependencies for $*$(UPDATE)" \
 	   "$(MAKEDEPEND_CMD) $(SUBS_QUARTUS) $(MAKEDEP_TOOL_QUARTUS) $*" \
@@ -275,7 +275,7 @@ $(SYNTH_SUB_DONE): $(SYNTHSUB_DEP)
 $(DEP_DIR)/%.quartus.o:  $(PRO_RESULT) | $(DEP_DIR) $(BLOG_DIR) $(IP_DIR) $(TCL_DIR)
 	@if [ "$(word 2,$^)" ]; then\
 	  if [ ! -f $(DEP_DIR)/$*.quartus.d ]; then \
-	    echo -e "$(RED)Dependency .d file missing for $*$(NC)"; false;\
+	    echo -e "$(RED)Dependency .d file missing for $*$(NC), missing source file?"; false;\
 	  fi; \
 	  $(HDL_BUILD_PATH)/intel/run_quartus.sh $* $(word 2,$^) $(BLOG_DIR) $(FILES_TCL); \
 	  touch $@; \
