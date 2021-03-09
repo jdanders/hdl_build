@@ -17,7 +17,7 @@ if {[file size autobackup_run_wave_maybe.do] > 1500} {
 }
 
 quit -sim
-vsim -i $(VSIM_PARAMS) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(SIM_LIB_DIR)/$(TOP_TB).$(TOP_COMP)
+vsim -i $(VSIM_PARAMS) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(SIM_LIB_DIR)/$(_TOP).$(TOP_COMP)
 
 endef
 
@@ -59,15 +59,23 @@ endef
 define batch
 #!/bin/bash
 
-vsim $(VSIM_PARAMS) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(BATCH_OPTIONS) $(SIM_LIB_DIR)/$(TOP_TB).$(TOP_COMP)
+vsim $(VSIM_PARAMS) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(BATCH_OPTIONS) $(SIM_LIB_DIR)/$(_TOP).$(TOP_COMP)
 
 endef
 
 define elab
 #!/bin/bash
 
-vsim $(VSIM_PARAMS) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(ELAB_OPTIONS) $(SIM_LIB_DIR)/$(TOP_TB).$(TOP_COMP)
+vsim $(VSIM_PARAMS) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(ELAB_OPTIONS) $(SIM_LIB_DIR)/$(_TOP).$(TOP_COMP)
 
+endef
+
+# For help run command: qverify -c -do "autocheck compile -help"
+define autocheck
+onerror {exit 1}
+do $(AC_DIRECTIVES)
+autocheck compile -d $(SIM_LIB_DIR)/$(_TOP).$(_TOP) $(SIM_LIB_LIST)
+autocheck verify
 endef
 
 # Convert the raw string above into `echo -e` friendly strings
@@ -75,3 +83,4 @@ run_str = $(subst ",\", $(subst $(newline),\n,$(run)))
 redo_str = $(subst ',\', $(subst $(newline),\n,$(redo)))
 batch_str = $(subst ",\", $(subst $(newline),\n,$(batch)))
 elab_str = $(subst ",\", $(subst $(newline),\n,$(elab)))
+autocheck_str = $(subst ",\", $(subst $(newline),\n,$(autocheck)))

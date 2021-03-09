@@ -60,6 +60,7 @@ ifneq (,$(SIM_DEPS))
   endif
   ifdef	TOP_TB
     -include $(DEP_DIR)/$(TOP_TB).modelsim.d
+    _TOP := $(TOP_TB)
   endif
 endif
 
@@ -76,7 +77,7 @@ MS_INI_PARAM := -modelsimini $(MS_INI)
 # Create list of libraries to use for vlog and vsim
 # In order to build in parallel, each module is in a separate lib
 # Use _DEPS variable and replace ' ' with ' -L ', like: -L mod1 -L mod2
-SIM_TOP_DEPS := $(sort $(strip $($(TOP_TB)_DEPS)))
+SIM_TOP_DEPS := $(sort $(strip $($(_TOP)_DEPS)))
 SIM_LIB_LIST := $(shell echo " $(SIM_TOP_DEPS)" | sed -E 's| +(\w)| -L \1|g') -L work $(SIM_LIB_APPEND)
 
 ## library string to appned to the library list, like `-L $(SIM_LIB_DIR)/customlib`
@@ -95,7 +96,7 @@ PARAMETER_DONE := $(DONE_DIR)/parameters.done
 # Create rules to determine dependencies and create compile recipes for .sv
 .PHONY: deps
 ## target to figure out sim dependencies only
-deps: $(DEP_DIR)/$(TOP_TB).modelsim.d
+deps: $(DEP_DIR)/$(_TOP).modelsim.d
 .PHONY: comp
 ## target to compile simulation files
 comp: $(MS_INI) $(DEP_DIR)/$(TOP_TB).modelsim.o $(precomp_hook)
@@ -129,7 +130,7 @@ $(DEP_DIR)/%.modelsim.o: $(SIM_LIB_DONE) | $(DEP_DIR) $(BLOG_DIR)
 
 
 PRESIM_GOAL := comp
-TOP_COMP := $(TOP_TB)
+TOP_COMP := $(_TOP)
 
 # To print variables that need full dependency includes
 # for example: make printmodelsim-SIM_LIB_LIST
