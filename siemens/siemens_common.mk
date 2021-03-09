@@ -201,13 +201,31 @@ batch: $(PARAMETER_DONE) $(PRESIM_GOAL) $(presim_hook)
 	     echo -e "$(GREEN)# Simulation successful $C"; \
 	 fi;
 
+.PHONY: autocheck_batch
+## Run autocheck in console only
+autocheck_batch: ac_batch
+
+.PHONY: ac_batch
+## Run autocheck in console only
+ac_batch: $(AC_DONE)
+	@-$(HDL_BUILD_PATH)/siemens/ac_pretty.sh '$(AC_OUT_DIR)' '$(AC_TOTAL)';
+
+.PHONY: autocheck
+## Run autocheck GUI
+autocheck: ac
+
+.PHONY: ac
+## Run autocheck GUI
+ac: ac_batch
+	@echo -e "$O Starting autocheck GUI $C (see $(BLOG_DIR)/autocheck.log)"
+	@cd $(AC_OUT_DIR) && qverify autocheck_verify.db &
 
 .PHONY: clean
 clean: clean_siemens
 .PHONY: clean_siemens
 clean_siemens:
 	@rm -rf $(RUN_SCRIPT) $(BATCH_SCRIPT) $(REDO_SCRIPT) $(SIM_LIB_DIR) $(WORK) certe_dump.xml
-	@if [[ "$(MAKECMDGOALS)" == *comp* ]]; then make --no-print-directory -r $(DEP_DIR)/$(TOP_TB).d; fi
+	@if [[ "$(MAKECMDGOALS)" == *comp* ]]; then make --no-print-directory -r $(DEP_DIR)/$(_TOP).d; fi
 
 .PHONY: cleanall
 cleanall: cleanall_siemens

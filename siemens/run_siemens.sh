@@ -17,7 +17,7 @@ EOF
 )
 fail_cmd=$(cat <<EOF
        grep -E --color \
-           "(^\*\* Fatal[ :]|^\*\* Error[ :]|^\*\* [^W]|UVM_FATAL[ :]@)" \
+           "(^\*\* Fatal[ :]|^\*\* Error[   :]|^\*\* [^W]|UVM_FATAL[ :]@)" \
            ${logfile};
        GREP_COLOR="0;40;1;33" grep -E --color "(^\*\* Warning[ :]|^\*\* [^E])" \
            ${logfile}
