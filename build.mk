@@ -36,6 +36,8 @@ endif
 ifdef GIT_REPO
   SRC_BASE_DIR := $(GIT_ROOT)
 endif
+# Make SRC_BASE_DIR available to sub commands
+export SRC_BASE_DIR
 
 # set IGNORE_DIRS in upper makefile
 # `touch .ignore_build_system` in a directory that should be ignored
@@ -45,7 +47,9 @@ IGNORE_FILE := .ignore_build_system
 ##################### Directory targets ##############################
 
 # BLD_DIR holds all make system results
-BLD_DIR := bld
+ifndef BLD_DIR
+  BLD_DIR := bld
+endif
 $(BLD_DIR):
 	@mkdir -p $(BLD_DIR)
 	@touch $(BLD_DIR)/$(IGNORE_FILE)

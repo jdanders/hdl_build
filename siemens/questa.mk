@@ -25,7 +25,7 @@ endif
 # The '%' becomes the module name
 # The '$*' is replaced by that module name
 $(DEP_DIR)/%.questa.d: $(SIM_SUB_DONE) $(predependency_hook) | $(DEP_DIR) $(BLOG_DIR)
-	@if [ -d $(SRC_BASE_DIR) ]; then\
+	@if [ -d "$(SRC_BASE_DIR)" ]; then\
 	  $(BUILD_SCRIPTS)/run_full_log_on_err.sh  \
 	   "$(CLEAR)Identifying dependencies for $*$(UPDATE)" \
 	   "$(MAKEDEPEND_CMD) $(SUBS_QUESTA) $(MAKEDEP_TOOL_QUESTA) $*" \
@@ -128,10 +128,17 @@ $(VOPT_DONE): $(DEP_DIR)/$(TOP_TB).questa.o $(PARAMETER_DONE) | $(DONE_DIR)
 # The source file dependency is added in the .d file
 # The "$*" is replaced with the stem, which is the module name
 # The "$(word 2,$^)" is the second dependency, which will be the sv filename
-# Every '.o' tool rule set needs to be added to build.mk
+VLOG_CMD = vlog -sv -work $(SIM_LIB_DIR)/$* $(VLOG_PARAMS) $(DEFAULT_SIM_LIB) $(SIM_LIB_LIST) $(word 2,$^)
+VLOG_MSG = $(CLEAR)Compiling $*$(UPDATE)
+SVH_MSG = $(CLEAR)Including directory for $*$(UPDATE)
+SVH_CMD = echo "$(COMP_MSG)"
 $(DEP_DIR)/%.questa.o: $(SIM_LIB_DONE) | $(DEP_DIR) $(BLOG_DIR)
-	@if [ ! -f $(DEP_DIR)/$*.questa.d ]; then echo -e "$(RED)Dependency .d file missing for $*$(NC), missing source file?"; exit 1; fi
-	@$(HDL_BUILD_PATH)/siemens/run_siemens.sh $* $(word 2,$^) $(BLOG_DIR)
+	@if [ ! -f $(DEP_DIR)/$*.questa.d ]; then echo -e "$(RED)Dependency .d file missing for $*$(NC)"; exit 1; fi
+	@set -e; if  [[ $(word 2,$^) == *.svh || $(word 2,$^) == *.vh ]]; then \
+	    $(HDL_BUILD_PATH)/siemens/run_siemens.sh '$(SVH_MSG)' '$(SVH_CMD)' '$(BLOG_DIR)/svh_$*.log'; \
+	else if [[ $(word 2,$^) == *.sv || $(word 2,$^) == *.v ]]; then \
+	    $(HDL_BUILD_PATH)/siemens/run_siemens.sh '$(VLOG_MSG)' '$(VLOG_CMD)' '$(BLOG_DIR)/vlog_$*.log'; \
+	else echo "Unknown filetype: $(word 2,$^)"; echo "$^"; exit 1; fi; fi;
 	@touch $@
 
 

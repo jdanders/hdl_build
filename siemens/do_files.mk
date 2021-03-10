@@ -70,7 +70,7 @@ vsim $(VSIM_PARAMS) $(DEFAULT_SIM_LIB) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(EL
 
 endef
 
-# Convert the raw string above into `printf` friendly strings
+# Convert the raw string above into `echo -e` friendly strings
 run_str = $(subst ",\", $(subst $(newline),\n,$(run)))
 redo_str = $(subst ',\', $(subst $(newline),\n,$(redo)))
 batch_str = $(subst ",\", $(subst $(newline),\n,$(batch)))

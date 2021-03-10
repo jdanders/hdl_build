@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 make comp
 SYNTH_OVERRIDE=y make project

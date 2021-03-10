@@ -46,7 +46,7 @@ PRO_RESULT := $(DONE_DIR)/pro_result
 QSF_DONE := $(DONE_DIR)/qsf.done
 STD_V_PRO_MACRO_FILE := $(TCL_DIR)/std_v_pro_macro.tcl
 TIMING_RPT_FILE := $(SYNTH_DIR)/TQ_timing_report.txt
-DATE := `date '+%a %H:%M:%S'`
+DATE := `date \"+%a %H:%M:%S\"`
 
 
 ##################### Module dependency targets ##############################
@@ -100,8 +100,6 @@ SYNTH_TOP_DEPS := $(sort $(strip $($(TOP)_DEPS)))
 
 # Extra sources for TCL commands
 TIMEQUEST_RPT_GEN := $(HDL_BUILD_PATH)/intel/synth_timequest_rpt_gen.tcl
-GLOBAL_SYNTH_SETTINGS := $(HDL_BUILD_PATH)/intel/synth_global_settings.tcl
-SDC_SETTINGS := $(HDL_BUILD_PATH)/intel/synth_sdc_settings.tcl
 
 # Altera tool version
 # (use `quartus_sh -v | grep -o "Pro"` to avoid path dep, but takes too long)
@@ -118,7 +116,7 @@ else
   IPGEN_ARGS := --synthesis=VERILOG --part=$(DEVICE) $(space)
   QMW := qmegawiz
   ## TODO: this should be moved to individual makefiles that need it
-  QSYS_IP_SEARCH_PARAM := --search-path=${SRC_BASE_DIR}/ip_cores/i2c_opencores,\\$$\\$$
+  QSYS_IP_SEARCH_PARAM := --search-path=${SRC_BASE_DIR}/ip_cores/i2c_opencores,\\$$$$\\$$$$
 endif
 
 QSH := quartus_sh
@@ -268,16 +266,37 @@ $(SYNTH_SUB_DONE): $(SYNTHSUB_DEP)
 # The source file dependency is added in the .d file
 # The "$*" is replaced with the stem, which is the module name
 # The "$(word 2,$^)" is the second dependency, which will be the sv filename
-# Every '.o' tool rule set needs to be added to build.mk
-# TODO: The `if word` below is to quiet a false try cause by including $(IP_MK)
+# ftype is the filename suffix with out the leading '.'
+# ipsearch needs to be set only if it's a qsys type file
+# TODO: The `if fpath` below is to quiet a false try cause by including $(IP_MK)
 #   For some reason this recipe is called before the files are written
 #   This shouldn't be needed -- figure out how to prevent it and remove `if`
+
+# synth_commands.mk includes all the commands run below
+# fpath, ftype, fdir, and ipsearch are used in synth_commands.mk
+include $(HDL_BUILD_PATH)/intel/synth_commands.mk
+COMP_MSG = $(CLEAR)Adding $*$(UPDATE)
+SVH_MSG = $(CLEAR)Including directory for $*$(UPDATE)
 $(DEP_DIR)/%.quartus.o:  $(PRO_RESULT) | $(DEP_DIR) $(BLOG_DIR) $(IP_DIR) $(TCL_DIR)
-	@if [ "$(word 2,$^)" ]; then\
+	$(eval fpath = $(word 2,$^))
+	$(eval ftype = $(subst .,,$(suffix $(word 2,$^))))
+	$(eval fdir = $(dir $(fpath)))
+	$(if $(filter qsys,$(ftype)),$(eval ipsearch := ${QSYS_IP_SEARCH_PARAM}),)
+	@set -e; if [ "$(fpath)" ]; then\
 	  if [ ! -f $(DEP_DIR)/$*.quartus.d ]; then \
 	    echo -e "$(RED)Dependency .d file missing for $*$(NC), missing source file?"; false;\
 	  fi; \
-	  $(HDL_BUILD_PATH)/intel/run_quartus.sh $* $(word 2,$^) $(BLOG_DIR) $(FILES_TCL); \
+	  if  [[ "$(fpath)" == *.svh || "$(fpath)" == *.vh ]]; then \
+	      $(HDL_BUILD_PATH)/intel/run_quartus.sh '$(SVH_MSG)' '$(svh_cmd)' '$(BLOG_DIR)/svh_quartus_$*.log'; \
+	  else if [[ "$(fpath)" == *_qmw.v ]]; then \
+	      $(HDL_BUILD_PATH)/intel/run_quartus.sh '$(COMP_MSG)' '$(qmegawiz_cmd)' '$(BLOG_DIR)/qmegawiz_$*.log'; \
+	  else if [[ "$(fpath)" == *.sv || "$(fpath)" == *.v ]]; then \
+	      $(HDL_BUILD_PATH)/intel/run_quartus.sh '$(COMP_MSG)' '$(sv_cmd)' '$(BLOG_DIR)/vlog_quartus_$*.log'; \
+	  else if [[ "$(fpath)" == *.ip ]]; then \
+	      $(HDL_BUILD_PATH)/intel/run_quartus.sh '$(COMP_MSG)' '$(ip_cmd)' '$(BLOG_DIR)/ip_$*.log'; \
+	  else if [[ "$(fpath)" == *.qsys ]]; then \
+	      $(HDL_BUILD_PATH)/intel/run_quartus.sh '$(COMP_MSG)' '$(qsys_cmd)' '$(BLOG_DIR)/qsys_$*.log'; \
+	  else echo "Unknown filetype: $(fpath)"; echo "$^"; exit 1; fi; fi; fi; fi; fi; \
 	  touch $@; \
 	else false; fi
 
@@ -286,10 +305,13 @@ $(DEP_DIR)/%.quartus.o:  $(PRO_RESULT) | $(DEP_DIR) $(BLOG_DIR) $(IP_DIR) $(TCL_
 # Create rules to create inputs to project QSF file
 
 # SDC files MUST be listed after IP files to work in Pro
-$(PROJ_TCL): $(FILES_TCL) $(PARAMETER_TCL) $(STD_V_PRO_MACRO_FILE) $(GLOBAL_SYNTH_SETTINGS) $(EXTRA_TCL) $(SDC_DONE) | $(TCL_DIR)
+include $(HDL_BUILD_PATH)/intel/synth_tcl.mk
+$(PROJ_TCL): $(FILES_TCL) $(PARAMETER_TCL) $(STD_V_PRO_MACRO_FILE) $(EXTRA_TCL) $(SDC_DONE) | $(TCL_DIR)
 	@echo; echo -e "$O Quartus project $C"
-	@cat $(GLOBAL_SYNTH_SETTINGS) $(STD_V_PRO_MACRO_FILE) $(FILES_TCL) $(PARAMETER_TCL) $(SDC_SETTINGS) > $(PROJ_TCL)
-	@echo '$(QSF_EXTRA)' >> $(PROJ_TCL)
+	@echo -e "$(synth_global)" > $@
+	@cat $(STD_V_PRO_MACRO_FILE) $(FILES_TCL) $(PARAMETER_TCL) >> $@
+	@echo -e "$(synth_sdc)" >> $@
+	@echo '$(QSF_EXTRA)' >> $@
 # Only one IP_SEARCH_PATHS allowed, combine lines with ';'
 	@grep IP_SEARCH_PATHS $(PROJ_TCL) | cut -d " " -f4 | sort | uniq | tr '\n' ';' > $(PROJ_TCL).ip
 	@if [ -s $(PROJ_TCL).ip ]; then \
