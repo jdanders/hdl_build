@@ -78,20 +78,23 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
 -include $(HDL_BUILD_PATH)/default_sim.mk
 -include $(HDL_BUILD_PATH)/default_synth.mk
+
 ifdef SIM_TOOL
-ifeq (modelsim,$(findstring modelsim,$(SIM_TOOL)))
-include $(HDL_BUILD_PATH)/siemens/modelsim.mk
-else ifeq (questa,$(findstring questa,$(SIM_TOOL)))
-include $(HDL_BUILD_PATH)/siemens/questa.mk
+ ifeq (modelsim,$(findstring modelsim,$(SIM_TOOL)))
+  include $(HDL_BUILD_PATH)/siemens/modelsim.mk
+ else ifeq (questa,$(findstring questa,$(SIM_TOOL)))
+  include $(HDL_BUILD_PATH)/siemens/questa.mk
+ endif
 endif
+
+ifdef SYNTH_TOOL
+ ifeq (quartus,$(findstring quartus,$(SYNTH_TOOL)))
+  include $(HDL_BUILD_PATH)/intel/quartus.mk
+ else ifeq (vivado,$(findstring vivado,$(SYNTH_TOOL)))
+  include $(HDL_BUILD_PATH)/xilinx/vivado.mk
+ endif
 endif
-ifdef SIM_TOOL
-ifeq (quartus,$(findstring quartus,$(SYNTH_TOOL)))
-include $(HDL_BUILD_PATH)/intel/quartus.mk
-else ifeq (vivado,$(findstring vivado,$(SYNTH_TOOL)))
-include $(HDL_BUILD_PATH)/xilinx/vivado.mk
-endif
-endif
+
 # addon make files are not included in hdl_build, but are included in local git
 -include $(wildcard $(HDL_BUILD_PATH)/*_addon.mk)
 # custom make files are not included in git, customize this repo
