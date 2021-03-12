@@ -1,26 +1,44 @@
 #-*- makefile -*-
-#--- Quartus build rules: ## ----------------
+## ------------------- #
+#  Quartus build rules #
+
+ifndef TOP_SYNTH
+  ifdef TOP
+## identify the top module to be simulated with `TOP_SYNTH`. If not set, `TOP` will be used.
+    TOP_SYNTH := $(TOP)
+  endif
+endif
+
+## identify the FPGA product family, like "Stratix 10" or "Agilex". Should match Quartus string in project settings
+# FAMILY: set in upper Makefile
+## identify the FPGA device part number, should match Quartus string in project settings
+# DEVICE: set in upper Makefile
 
 ifndef NUM_TIMING_TRIES
+## tell synth_timing number of tries before giving up on timing
   NUM_TIMING_TRIES := 10
 endif
 
-# Use this rule in a Makefile to force a recipe to execute before synth prep
 presynth_hook := $(DONE_DIR)/presynth_hook.done
-$(presynth_hook): | $(DONE_DIR) ## hook to run before any synth work
+## target hook to run before any synth work
+$(presynth_hook): | $(DONE_DIR)
 	@touch $@
 
-# Use this rule in a Makefile to force a recipe to execute after IP Gen
 post_qgen_ip_hook := $(DONE_DIR)/post_qgen_ip_hook.done
-$(post_qgen_ip_hook): | $(DONE_DIR) ## hook to run after ip generaation is done
+## target hook to run after ip generaation is done, before mapping
+$(post_qgen_ip_hook): | $(DONE_DIR)
 	@touch $@
 
 SYNTH_SUB_DONE := $(DONE_DIR)/synth_substitutions.done
 
 # To print variables that need full dependency includes
 .PHONY: printquartus-%
-printquartus-%: ## use 'make printquartus-VAR_NAME' to print variable after quartus processing
+## use 'make printquartus-VAR_NAME' to print variable after Quartus processing
+printquartus-%:
 	@echo '$* = $($*)'
+
+## synthesis enforces `SYNTH_TOOL` version match against tool on `PATH`. Run make with `SYNTH_OVERRIDE=1` to ignore the check.
+# SYNTH_OVERRIDE: set in upper Makefile
 
 # Recipe to always run
 .PHONY: always_run
@@ -32,8 +50,8 @@ always_run:
 	@ $(HDL_BUILD_PATH)/intel/quartus_running.sh
 
 
-SYNTH_DIR := $(BLD_DIR)/$(TOP)
-PROJECT := $(SYNTH_DIR)/$(TOP)
+SYNTH_DIR := $(BLD_DIR)/$(TOP_SYNTH)
+PROJECT := $(SYNTH_DIR)/$(TOP_SYNTH)
 IP_DIR := $(CURDIR)/$(BLD_DIR)/ip_cores
 IP_MK := $(IP_DIR)/ip.mk
 TCL_DIR := $(BLD_DIR)/tcl
@@ -52,6 +70,9 @@ DATE := `date \"+%a %H:%M:%S\"`
 ##################### Module dependency targets ##############################
 
 MAKEDEP_TOOL_QUARTUS := "quartus"
+
+## a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `example-subs.yml`
+# SYNTH_SUBSTITUTIONS: set in upper Makefile
 ifdef SYNTH_SUBSTITUTIONS
   SUBS_QUARTUS := --subsfilelist '$(SYNTH_SUBSTITUTIONS)'
 endif
@@ -84,11 +105,11 @@ SYNTH_DEPS := $(filter $(QUARTUS_TARGETS),$(MAKECMDGOALS))
 ifneq (,$(SYNTH_DEPS))
   # The top .d file must be called out specifically to get the ball rolling
   # Otherwise nothing happens because there are no matches to the wildcard rule
-  ifndef TOP
-    $(error No TOP module defined)
+  ifndef TOP_SYNTH
+    $(error No TOP_SYNTH module defined)
   endif
-  ifdef	TOP
-    -include $(DEP_DIR)/$(TOP).quartus.d
+  ifdef	TOP_SYNTH
+    -include $(DEP_DIR)/$(TOP_SYNTH).quartus.d
     -include $(IP_MK)
     $(BLD_DIR): always_run
   endif
@@ -96,7 +117,7 @@ endif
 
 
 ##################### Synthesis Parameters ##############################
-SYNTH_TOP_DEPS := $(sort $(strip $($(TOP)_DEPS)))
+SYNTH_TOP_DEPS := $(sort $(strip $($(TOP_SYNTH)_DEPS)))
 
 # Extra sources for TCL commands
 TIMEQUEST_RPT_GEN := $(HDL_BUILD_PATH)/intel/synth_timequest_rpt_gen.tcl
@@ -137,7 +158,7 @@ ifdef STP_FILE
   STP_CHECK := @if [ -f "$(STP_FILE)" ]; then \
      $(BUILD_SCRIPTS)/run_print_err_only.sh \
 	 "$O Adding SignalTap file to project $C (see $(BLOG_DIR)/build_signaltap.log)" \
-	   "cd $(SYNTH_DIR) && $(QSTP) $(TOP) $(STP_ARGS)" \
+	   "cd $(SYNTH_DIR) && $(QSTP) $(TOP_SYNTH) $(STP_ARGS)" \
 	   $(BLOG_DIR)/build_signaltap.log; \
  fi;
 else
@@ -153,6 +174,14 @@ ASM_ARGS :=
 QSTA := quartus_sta
 STA_ARGS :=
 
+## file path to a tcl file for Quartus settings that will be included in the QSF
+# QUARTUS_FILE: set in upper Makefile
+## file path to a tcl file for transciever settings that will be included in the QSF
+# XCVR_SETTINGS: set in upper Makefile
+## file path to an SDC timing constraints file that will be used in the QSF
+# SDC_FILE: set in upper Makefile
+## a variable string that will be included directly in QSF
+# QSF_EXTRA: set in upper Makefile
 ABSPATH_QUARTUS_FILE := $(realpath $(QUARTUS_FILE))
 ABSPATH_XCVR_SETTINGS := $(realpath $(XCVR_SETTINGS))
 ABSPATH_SDC_FILE := $(realpath $(SDC_FILE))
@@ -176,12 +205,16 @@ $(EXTRA_TCL): $(QUARTUS_FILE) $(XCVR_SETTINGS) | $(DONE_DIR)
 ##################### Dependency targets ##############################
 # Create rules to determine dependencies and create compile recipes for .sv
 .PHONY: filelist_synth
-filelist_synth: $(DEP_DIR)/$(TOP).quartus.d ## print list of files used in synth
+## print list of files used in synth
+filelist_synth: $(DEP_DIR)/$(TOP_SYNTH).quartus.d
 	@grep "\.d:" $(DEP_DIR)/* | cut -d " " -f 2 | sort | uniq
 .PHONY: modules_synth
-modules_synth: $(DEP_DIR)/$(TOP).quartus.d ## print list of modules used in synth
+## print list of modules used in synth
+modules_synth: $(DEP_DIR)/$(TOP_SYNTH).quartus.d
 	@echo $(SYNTH_TOP_DEPS)
 
+## track whether Quartus Pro or Std is being used. If Std, sets `VERILOG_MACRO STD_QUARTUS=1`. Always sets `VERILOG_MACRO SYNTHESIS=1`
+# PRO_RESULT:
 # Check to see whether it's Quartus Pro or Std and record result
 ifeq ($(shell $(BUILD_SCRIPTS)/variable_change.sh "$(PRO_VERSION)" $(PRO_RESULT)),yes)
 PRO_DEP:=$(PRO_RESULT).tmp
@@ -204,9 +237,13 @@ else
 endif
 
 # the .o files will write to individual files, so cat together into one file
-$(FILES_TCL): $(SYNTH_SUB_DONE) $(presynth_hook) $(DEP_DIR)/$(TOP).quartus.o | $(DEP_DIR) $(TCL_DIR)
+$(FILES_TCL): $(SYNTH_SUB_DONE) $(presynth_hook) $(DEP_DIR)/$(TOP_SYNTH).quartus.o | $(DEP_DIR) $(TCL_DIR)
 	@cat $(FILES_TCL).* > $@
 	@touch $@
+
+##### Parameters ##
+## monitors variables prefixed with **`PARAM_`** and passes them to Quartus. `PARAM_NUM_PORTS := 2` passes a parameter named NUM_PORTS with value of 2.
+# PARAM_*: set in upper Makefile
 
 # Gather all PARAM_ environment variables and make a parameter string
 # First filter all variables to find all that start with PARAM_
@@ -304,6 +341,9 @@ $(DEP_DIR)/%.quartus.o:  $(PRO_RESULT) | $(DEP_DIR) $(BLOG_DIR) $(IP_DIR) $(TCL_
 ##################### Project targets ##############################
 # Create rules to create inputs to project QSF file
 
+## all QSF files get the values set in `synth_tcl.mk` global settings, including jtag.sdc
+# synth_tcl.mk:
+
 # SDC files MUST be listed after IP files to work in Pro
 include $(HDL_BUILD_PATH)/intel/synth_tcl.mk
 $(PROJ_TCL): $(FILES_TCL) $(PARAMETER_TCL) $(STD_V_PRO_MACRO_FILE) $(EXTRA_TCL) $(SDC_DONE) | $(TCL_DIR)
@@ -320,9 +360,10 @@ $(PROJ_TCL): $(FILES_TCL) $(PARAMETER_TCL) $(STD_V_PRO_MACRO_FILE) $(EXTRA_TCL) 
 
 
 .PHONY: project
-project: $(QSF_DONE) ## Create quartus project
+## target to create Quartus project
+project: $(QSF_DONE)
 
-# Quartus updates the qsf file, so use DONE file for make dependencies
+# Quartus updates the QSF file, so use DONE file for make dependencies
 $(QSF_DONE): $(PROJ_TCL) $(GIT_INFO_FILE) | $(SYNTH_DIR) $(DONE_DIR)
 	@-rm -f $(PROJECT).qpf $(PROJECT).qsf
 	@$(BUILD_SCRIPTS)/run_print_warn_and_err.sh \
@@ -331,9 +372,9 @@ $(QSF_DONE): $(PROJ_TCL) $(GIT_INFO_FILE) | $(SYNTH_DIR) $(DONE_DIR)
 	@touch $@
 
 
-# Shortcut to open Quartus GUI
 .PHONY: quartus
-quartus: $(QSF_DONE) ## Open Quartus GUI
+## target to open Quartus GUI
+quartus: $(QSF_DONE)
 	$(STP_CHECK)
 # Bring back "runclean" command if there is a problem here
 	quartus $(PROJECT).qpf &
@@ -344,7 +385,8 @@ $(DONE_DIR)/git.rpt: $(PROJ_TCL) | $(DONE_DIR)
 	@touch $@
 
 .PHONY: git_info
-git_info: $(GIT_INFO_FILE) ## Archive git info in project directory
+## target to archive git info in project directory
+git_info: $(GIT_INFO_FILE)
 $(GIT_INFO_FILE): $(DONE_DIR)/git.rpt | $(SYNTH_DIR)
 ifdef GIT_REPO
 	@echo -e "Saving git repository information in $@"
@@ -367,14 +409,16 @@ $(IP_MK): $(QSF_DONE)
 	@touch $@
 
 .PHONY: ipgen
-ipgen: $(DONE_DIR)/qgen_ip.done | $(DONE_DIR) ## Generate Quartus IP
+## target to generate Quartus IP
+ipgen: $(DONE_DIR)/qgen_ip.done | $(DONE_DIR)
 # IP rules are built up in $(IP_MK)
 $(DONE_DIR)/qgen_ip.done: $(IP_MK)
 	@touch $@
 
 
 .PHONY: elab_synth
-elab_synth: $(DONE_DIR)/elab_synth.done $(post_qgen_ip_hook) ## Quartus analysis and elaboration
+## target to run through Quartus analysis and elaboration
+elab_synth: $(DONE_DIR)/elab_synth.done $(post_qgen_ip_hook)
 $(DONE_DIR)/elab_synth.done: $(DONE_DIR)/qgen_ip.done
 	@$(BUILD_SCRIPTS)/run_print_err_only.sh \
 	   "$O Elaborating (started $(DATE)) $C (see $(BLOG_DIR)/build_elaboration.log)" \
@@ -384,7 +428,8 @@ $(DONE_DIR)/elab_synth.done: $(DONE_DIR)/qgen_ip.done
 
 
 .PHONY: map
-map: $(DONE_DIR)/merge.done ## Quartus synthesis/mapping
+## target to run through Quartus synthesis/mapping
+map: $(DONE_DIR)/merge.done
 
 $(DONE_DIR)/map.done: $(DONE_DIR)/qgen_ip.done $(post_qgen_ip_hook)
 	$(STP_CHECK)
@@ -403,14 +448,15 @@ else
   $(DONE_DIR)/merge.done: $(DONE_DIR)/map.done
 	@$(BUILD_SCRIPTS)/run_print_err_only.sh \
 	   "$O Partition Merge $C (see $(BLOG_DIR)/build_partition.log)" \
-	   "$(QPART) $(QPART_ARGS) $(PROJECT) -c $(TOP)" \
+	   "$(QPART) $(QPART_ARGS) $(PROJECT) -c $(TOP_SYNTH)" \
 	   $(BLOG_DIR)/build_partition.log
 	@touch $@
 endif
 
 
 .PHONY: fit
-fit: $(DONE_DIR)/fit.done ## Quartus fit
+## target to run through Quartus fit
+fit: $(DONE_DIR)/fit.done
 $(DONE_DIR)/fit.done: $(DONE_DIR)/merge.done $(ABSPATH_SDC_FILE)
 	@$(BUILD_SCRIPTS)/run_print_err_only.sh \
 	   "$O Fit (started $(DATE)) $C (see $(BLOG_DIR)/build_fit.log)" \
@@ -428,12 +474,14 @@ define do-asm =
 endef
 
 .PHONY: asm
-asm: $(DONE_DIR)/asm.done ## Quartus assembler (no timing)
+## target to run through Quartus assembler (no timing)
+asm: $(DONE_DIR)/asm.done
 $(DONE_DIR)/asm.done: $(DONE_DIR)/fit.done
 	$(do-asm)
 
 .PHONY: timing
-timing: $(DONE_DIR)/timing.done ## Quartus timing (no assembler)
+## target to run through Quartus timing (no assembler)
+timing: $(DONE_DIR)/timing.done
 $(DONE_DIR)/timing.done: $(DONE_DIR)/fit.done $(TIMEQUEST_RPT_GEN)
 	@$(BUILD_SCRIPTS)/run_print_err_only.sh \
 	   "$O Analyzing timing (started $(DATE)) $C (see $(BLOG_DIR)/build_sta.log)" \
@@ -457,13 +505,15 @@ $(DONE_DIR)/timing_timing.done: $(DONE_DIR)/fit_timing.done | $(DONE_DIR) $(SYNT
 	@touch $@
 
 .PHONY: run_timing_rpt
-run_timing_rpt: | $(SYNTH_DIR)  ## Generate TQ_timing_report.txt
+## target to generate TQ_timing_report.txt
+run_timing_rpt: | $(SYNTH_DIR)
 	@$(TIMING_RPT_CMD)
 
 
 # Path for synth_timing. To specify num tries: override NUM_TIMING_TRIES
 .PHONY: fit_timing
-fit_timing: $(DONE_DIR)/fit_timing.done ## Run fit until timing is made
+## target to run fit until timing is made
+fit_timing: $(DONE_DIR)/fit_timing.done
 $(DONE_DIR)/fit_timing.done: $(DONE_DIR)/merge.done
 	@echo -e "$O Timing Fit, $(NUM_TIMING_TRIES) tries (started $(DATE)) $C"
 	@$(HDL_BUILD_PATH)/intel/timing_rerun.py $(SYNTH_DIR) $(PROJECT) $(DONE_DIR)/map.done -n $(NUM_TIMING_TRIES)
@@ -472,34 +522,45 @@ $(DONE_DIR)/fit_timing.done: $(DONE_DIR)/merge.done
 	@touch $@
 
 .PHONY: asm_timing
-asm_timing: $(DONE_DIR)/asm_timing.done  ## Quartus assembler after running fit until timing is made
+## target to Quartus assembler after running fit until timing is made
+asm_timing: $(DONE_DIR)/asm_timing.done
 $(DONE_DIR)/asm_timing.done: $(DONE_DIR)/fit_timing.done
 	$(do-asm)
 	@touch $(DONE_DIR)/asm.done
 
 
 .PHONY: synth
-synth: $(DONE_DIR)/synth  ## Run full synthesis: map fit asm timing
+## target to run full synthesis: map fit asm timing
+synth: $(DONE_DIR)/synth
 $(DONE_DIR)/synth: $(DONE_DIR)/map.done $(DONE_DIR)/fit.done $(DONE_DIR)/asm.done $(DONE_DIR)/timing.done $(TIMING_RPT_FILE)
 	@touch $@
 
 .PHONY: synth_timing
-synth_timing: $(DONE_DIR)/synth_timing  ## Run full synthesis, running fit until timing is made
+## target to run full synthesis, running fit until timing is made
+synth_timing: $(DONE_DIR)/synth_timing
 $(DONE_DIR)/synth_timing: $(DONE_DIR)/map.done $(DONE_DIR)/fit_timing.done $(DONE_DIR)/asm_timing.done $(DONE_DIR)/timing_timing.done
 	@touch $@
 
 
 ifndef ARCHIVE_DIR
+## archive base location, default is `$(BLD_DIR)/archive`
   ARCHIVE_DIR := $(BLD_DIR)/archive
 endif
 # to eval `date` shell at start, use 'ifndef' combined with ':=' assignment
 ifndef ARCHIVE_SUB_DIR
+ ifdef GIT_REPO
+## archive subdirectory location, default is `build_YYYY_MM_DD-HH.MM-gitbranch`
   ARCHIVE_SUB_DIR := build_$(shell date +"%Y_%m_%d-%H.%M")-$(shell git rev-parse --abbrev-ref HEAD 2> /dev/null || echo nogit)
+ else
+  ARCHIVE_SUB_DIR := build_$(shell date +"%Y_%m_%d-%H.%M")
+ endif
 endif
 ifndef ARCHIVE_FILE_PREFIX
+## prefix archive files, default is `archive_`
   ARCHIVE_FILE_PREFIX := archive_
 endif
 ifndef ARCHIVE_DEST
+## path archive files will be copied. Default is `$(ARCHIVE_DIR)/$(ARCHIVE_SUB_DIR)`
   ARCHIVE_DEST := $(ARCHIVE_DIR)/$(ARCHIVE_SUB_DIR)
 endif
 
@@ -507,7 +568,7 @@ define do-archive =
 @echo;echo -e "$O Archiving synthesis results to $(ARCHIVE_DEST) $C"
 @mkdir -p $(ARCHIVE_DEST)
 @-chmod 777 $(ARCHIVE_DEST)
-cp $(PROJECT).sof $(ARCHIVE_DEST)/$(ARCHIVE_FILE_PREFIX)$(TOP).sof
+cp $(PROJECT).sof $(ARCHIVE_DEST)/$(ARCHIVE_FILE_PREFIX)$(TOP_SYNTH).sof
 @if [ -n "$(STP_FILE)" ]; then \
   cp $(STP_FILE) $(ARCHIVE_DEST)/$(ARCHIVE_FILE_PREFIX)$(notdir $(STP_FILE)) || true; \
 fi
@@ -522,15 +583,18 @@ endef
 
 # This target will archive whatever is there without checking dependencies
 .PHONY: archive_synth_results
-archive_synth_results: ## Archive synthesis results to ARCHIVE_DEST
+## target to archive synthesis results to `ARCHIVE_DEST`
+archive_synth_results:
 	$(do-archive)
 
 .PHONY: synth_archive
-synth_archive: $(DONE_DIR)/synth ## Run full synthesis and archive when done
+## target to run full synthesis and archive when done
+synth_archive: $(DONE_DIR)/synth
 	$(do-archive)
 
 .PHONY: synth_archive_timing
-synth_archive_timing: $(DONE_DIR)/synth_timing ## Run full synthesis, running fit until timing is made, and archive when done
+## target to run full synthesis, running fit until timing is made, and archive when done
+synth_archive_timing: $(DONE_DIR)/synth_timing
 	$(do-archive)
 
 .PHONY: clean
@@ -545,16 +609,20 @@ cleanall: cleanall_quartus
 cleanall_quartus:
 	@rm -rf $(SYNTH_DIR)*
 
-## Extra targets
+##### Extra targets
 .PHONY: timing_rpt
-timing_rpt: $(TIMING_RPT_FILE) ## Print timing report
+## target to print timing report
+timing_rpt: $(TIMING_RPT_FILE)
 	-@cat $(TIMING_RPT_FILE)
-timing_rpt_timing: $(DONE_DIR)/timing_timing.done ## Print timing report after repeating fit until timing is met
+## target to print timing report after repeating fit until timing is met
+timing_rpt_timing: $(DONE_DIR)/timing_timing.done
 	-@cat $(TIMING_RPT_FILE)
 
 # Search the timing report for error lines and exit error if found
 .PHONY: timing_check_all
-timing_check_all: $(TIMING_RPT_FILE) ## Report timing problems
+## target to report timing problems
+timing_check_all: $(TIMING_RPT_FILE)
 	egrep ':;[^;]*; -[^;]*; [0-9]+.*|Worst-case setup slack is -|Illegal .*[1-9].*|Unconstrained .*[1-9].*|Found combinational loop|Inferred latch' $(TIMING_RPT_FILE) && exit 1
-timing_check_all_timing: $(DONE_DIR)/timing_timing.done  ## Report timing problems after repeating fit until timing is met
+## target to report timing problems after repeating fit until timing is met
+timing_check_all_timing: $(DONE_DIR)/timing_timing.done
 	egrep ':;[^;]*; -[^;]*; [0-9]+.*|Worst-case setup slack is -|Illegal .*[1-9].*|Unconstrained .*[1-9].*|Found combinational loop|Inferred latch' $(TIMING_RPT_FILE) && exit 1

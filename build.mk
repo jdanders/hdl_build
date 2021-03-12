@@ -1,10 +1,11 @@
 #-*- makefile -*-
-#--- Core build rules: ## ----------------
+## ---------------- #
+#  Core build rules #
 # Usage notes:
 # * Shell command performance is greatly increased when variables are immediate
 #   so all assignments are ':=' variety. Use the 'override' command in upper
 #   makefiles if you'd like to change one of these values. For example:
-#    override BLD_DIR := bld_test
+#    override BLOG_DIR := build_logs
 
 # When creating new targets for users, add a ## comment on the line for help
 .DEFAULT_GOAL := helpall
@@ -12,6 +13,9 @@
 # Disable implicit suffixes for performance
 MAKEFLAGS += --no-builtin-rules
 .SUFFIXES:
+
+## Set SLOW=1 for a call to make to disable parallel building
+# SLOW: set in upper Makefile or environment
 
 # Enable parallel processing by default
 CPUS ?= $(shell nproc || echo 1)
@@ -30,17 +34,19 @@ include $(BUILD_SCRIPTS)/color.mk
 # In git repo?
 GIT_ROOT := $(shell $(BUILD_SCRIPTS)/git_root_path)
 ifneq (Could not find git root path,$(GIT_ROOT))
+## this variable is only defined if the Makefile is in a git repository (test if git repo with make's `ifdef`)
   GIT_REPO := $(GIT_ROOT)
 endif
 # If not a git repo, define SRC_BASE_DIR outside of hdl_build
 ifdef GIT_REPO
+## directory that holds all relevant source code. Will be determined automatically if in a git repository.
   SRC_BASE_DIR := $(GIT_ROOT)
 endif
 # Make SRC_BASE_DIR available to sub commands
 export SRC_BASE_DIR
 
-# set IGNORE_DIRS in upper makefile
-# `touch .ignore_build_system` in a directory that should be ignored
+
+## `touch .ignore_build_system` in a directory that should be ignored by the build system
 IGNORE_FILE := .ignore_build_system
 
 
@@ -48,6 +54,7 @@ IGNORE_FILE := .ignore_build_system
 
 # BLD_DIR holds all make system results
 ifndef BLD_DIR
+## directory where build results are stored
   BLD_DIR := bld
 endif
 $(BLD_DIR):
@@ -71,7 +78,8 @@ $(DEP_DIR): | $(BLD_DIR)
 
 # Use this rule in a Makefile to force a recipe before anaylzing dependencies
 predependency_hook := $(DONE_DIR)/predependency_hook.done
-$(predependency_hook): | $(DONE_DIR) ## hook to run before dependency
+## target hook to run something before dependency analysis
+$(predependency_hook): | $(DONE_DIR)
 	@touch $@
 
 # Helper function to filter strings to their unique members
@@ -80,6 +88,8 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
 ##################### include other build modules ##############################
 
+## select which simulation tool should be used: questa or modelsim
+# SIM_TOOL: set in upper Makefile
 -include $(HDL_BUILD_PATH)/default_sim.mk
 -include $(HDL_BUILD_PATH)/default_synth.mk
 
@@ -91,6 +101,8 @@ ifdef SIM_TOOL
  endif
 endif
 
+## select which synthesis tool should be used: quartuspro, quartus or vivado
+# SYNTH_TOOL: set in upper Makefile
 ifdef SYNTH_TOOL
  ifeq (quartus,$(findstring quartus,$(SYNTH_TOOL)))
   include $(HDL_BUILD_PATH)/intel/quartus.mk
@@ -107,10 +119,14 @@ endif
 
 ##################### Module discovery targets ##############################
 
+## a list of space delineated directory names to ignore during dependency search
+# IGNORE_DIRS: set in upper Makefile
 ifdef IGNORE_DIRS
   IGNORE_PARAM := --ignoredirs '$(IGNORE_DIRS)'
 endif
 
+## a list of space delineated directory names to add during dependency search. This is only useful for directories normally ignored by the build system or a directory outside the `SRC_BASE_DIR` directory.
+# EXTRA_DIRS: set in upper Makefile
 ifdef EXTRA_DIRS
   EXTRA_PARAM := --extradirs '$(EXTRA_DIRS)'
 endif
@@ -121,47 +137,56 @@ MAKEDEPEND_CMD := $(BUILD_SCRIPTS)/build_dependency_files.py $(EXTRA_PARAM) --ig
 ##################### Cleaning targets ##############################
 
 .PHONY: clean
-clean: ## force redo of dependency analysis and beyond
+## target to force redo of build steps and remove previous logs
+clean:
 	@echo -e "$O Removing build files $C"
 	@find $(BLD_DIR) -maxdepth 1 -type f -delete > /dev/null 2>&1 || true
 	@rm -rf $(DONE_DIR) $(BLOG_DIR) $(DEP_DIR)
 
 .PHONY: cleanall
-cleanall: clean ## remove all build results
+## target to remove all build results
+cleanall: clean
 	@echo;echo -e "$O Removing all build related files $C";echo
 	@rm -rf $(BLD_DIR)
 	@rm -f *.hex *.dat *.mif
 
 .PHONY: nuke
-nuke: cleanall ## alias for cleanall
+## target to alias for cleanall
+nuke: cleanall
 
 
 ##################### Helper targets ##############################
 # List of source makefiles not in the bld directory
 SRC_MAKEFILES = $(filter-out $(BLD_DIR)/%,$(MAKEFILE_LIST))
 
-# A target that lists all targets.
 .PHONY: list_targets
-list_targets: ## list all available targets
-	@$(MAKE) MAKEFLAGS= -nqp .DEFAULT | awk -F':' '/^[a-zA-Z0-9][^$$#\/\t=]*:([^=]|$$)/ {split($$1,A,/ /);for(i in A)print A[i]}' | sort -u
+## target to list all available Makefile targets
+list_targets:
+	@$(MAKE) MAKEFLAGS=-r -nqp .DEFAULT | awk -F':' '/^[a-zA-Z0-9][^$$#\/\t=]*:([^=]|$$)/ {split($$1,A,/ /);for(i in A)print A[i]}' | sort -u
 
-# print the value of any variable.  Just type:
-# make print-VARIABLE_NAME
-#
-# Got this magic from here: https://blog.melski.net/2010/11/30/makefile-hacks-print-the-value-of-any-variable/
 .PHONY: print-%
-print-%: ## use 'make print-VAR_NAME' to examine variable values
+## target to use `make print-VARIABLE_NAME` to examine `VARIABLE_NAME`'s value
+print-%:
 	@echo '$* = $($*)'
 
 .PHONY: print-Makefiles
-print-Makefiles: ## print a list of all included makefiles
+## target to print a list of all included makefiles
+print-Makefiles:
 	@echo $(MAKEFILE_LIST)
 
+# Help is a line starting with '##' followed by help text
+# The next line is the subject of the help followed by ':'
+HELP_GREP := grep --no-group-separator -A1 -hE '^\#\# ' $(MAKEFILE_LIST)
 .PHONY: help
-help:           ## Show brief help.
-	@echo -e "$$(grep -hE ':.*##' $(MAKEFILE_LIST) | grep -v grep | sed -e 's/\\$$//' | sed -e 's/:.*##.*//')"
-helpall:           ## Show this help.
-	@echo -e "$$(grep -hE ':.*##' $(MAKEFILE_LIST) | grep -v grep | sed -e 's/\\$$//' | sed -e 's/:.*##/:\n  /')"
+## target to show brief help.
+help:
+	@$(HELP_GREP) | sed -e '$!N;s/## \(.*\)\n[# ]*\([^ ]*\) *:.*/\2/'
+## target to show this help.
+helpall:
+	@$(HELP_GREP) | sed -e '$!N;s/## \(.*\)\n[# ]*\([^ ]*\) *:.*/\2:\n  \1/'
+
+helpmarkdown:
+	@$(HELP_GREP) | sed -e '$!N;s/## \(.*\)\n[# ]*\([^ ]*\) *:.*/* **`\2`**: \1/'
 
 # Bash auto-complete uses this target, specify to make sure nothing happens
 .DEFAULT:

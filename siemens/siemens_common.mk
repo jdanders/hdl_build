@@ -2,17 +2,20 @@
 
 # Use this rule in a Makefile to force a recipe to execute before libraries
 presimlib_hook := $(DONE_DIR)/presimlib_hook.done
-$(presimlib_hook): | $(DONE_DIR) ## hook to run before sim libraries
+## target hook to run before sim libraries
+$(presimlib_hook): | $(DONE_DIR)
 	@touch $@
 
 # Use this rule in a Makefile to force a recipe to execute before comp
 precomp_hook := $(DONE_DIR)/precomp_hook.done
-$(precomp_hook): | $(DONE_DIR) ## hook to run before compilation
+## target hook to run before compilation
+$(precomp_hook): | $(DONE_DIR)
 	@touch $@
 
 # Use this rule in a Makefile to force a recipe to execute before simulation
 presim_hook := $(DONE_DIR)/presim_hook.done
-$(presim_hook): | $(DONE_DIR) ## hook to run before starting sim
+## target hook to run before starting sim
+$(presim_hook): | $(DONE_DIR)
 	@touch $@
 
 
@@ -31,6 +34,21 @@ endif
 $(SIM_LIB_DIR):
 	@mkdir -p $(SIM_LIB_DIR)
 
+##### Upper Makefile simulation settings ####
+## options for `vlog` command
+# VLOG_OPTIONS : set in upper Makefile
+## options for `vlog` coverage
+# VLOG_COVER_OPT : set in upper Makefile
+## options for `vopt` command
+# VOPT_OPTIONS : set in upper Makefile
+## options for `vsim` command
+# VSIM_OPTIONS : set in upper Makefile
+## options for `vsim` coverage
+# VSIM_COVER_OPT : set in upper Makefile
+## commands to add to batch for coverage
+# COV_COMMANDS : set in upper Makefile
+
+
 # In order to more closely simulate hardware conditions, default all registers to '0' instead of 'X'
 # See Quartus Handbook, "Specifying a Power-Up Value" where it says
 # "Registers power up to 0 by default" unless NOT gate push-back is specified.
@@ -40,7 +58,7 @@ $(SIM_LIB_DIR):
 #   before written in always_comb or always @* block".
 # Disable warnings about "Too few port connections" and "Some checking for
 #   conflicts with always_comb and always_latch variables not yet supported."
-VLOG_PARAMS := $(VLOG_OPTIONS) $(MS_INI_PARAM) +initreg+0 +initmem+0 -error 2182 +nowarnSVCHK $(UVM_DPILIB_VLOG_OPT) $(VLOG_COVER_OPT) $(MSIM_VOPT)
+VLOG_PARAMS := $(VLOG_OPTIONS) $(MS_INI_PARAM) +initreg+0 +initmem+0 -error 2182 +nowarnSVCHK $(VLOG_COVER_OPT) $(MSIM_VOPT)
 
 WLF_PARAM := -wlf $(BLD_DIR)/vsim.wlf
 # set VSIM_COVER_OPT=-coverage to run a coverage test (or use smake)
@@ -60,6 +78,10 @@ ELAB_OPTIONS := -batch -do "exit"
 ifeq ($(shell $(BUILD_SCRIPTS)/variable_change.sh "$(SIM_PARAM)" $(PARAMETER_DONE)),yes)
 SIM_PARAM_DEP=$(PARAMETER_DONE).tmp
 endif
+
+##### Parameters ##
+## monitors variables prefixed with **`PARAM_`** and passes them to simulator. `PARAM_NUM_PACKETS := 20` passes a parameter named NUM_PACKETS with value of 20.
+# PARAM_*: set in upper Makefile
 
 # Update the parameters if any of the PARAM_ variable change
 $(PARAMETER_DONE).tmp: | $(DONE_DIR)
@@ -152,15 +174,18 @@ $(SIM_SUB_DONE): $(SIMSUB_DEP)
 ##################### Do script targets ##############################
 include $(HDL_BUILD_PATH)/siemens/do_files.mk
 .PHONY: sim
-sim: $(PRESIM_GOAL) $(presim_hook) ## Run simulation in GUI
+# to run make commands cleanly in GUI, remove -j flags
+## target to run simulation in GUI
+sim: $(PRESIM_GOAL) $(presim_hook)
 	@echo -e "$(run_str)" > $(RUN_SCRIPT)
 	@echo -e '$(redo_str)' > $(REDO_SCRIPT)
 	@echo -e "$O Starting simulation $C"
-	MAKEFLAGS="-$(filter-out --jobserver-fds=%,$(MAKEFLAGS))" vsim $(MS_INI_PARAM) -i -do $(RUN_SCRIPT)&
+	MAKEFLAGS="-r" vsim $(MS_INI_PARAM) -i -do $(RUN_SCRIPT)&
 
 
 .PHONY: elab_sim
-elab_sim: $(PRESIM_GOAL) $(presim_hook) ## Run elaboration batch
+## target to run elaboration batch
+elab_sim: $(PRESIM_GOAL) $(presim_hook)
 	@echo -e "$(elab_str)" > $(BATCH_SCRIPT)
 	@chmod +x $(BATCH_SCRIPT)
 	@echo -e "$O Starting batch simulation $C (see $(BLOG_DIR)/batch.log)"
@@ -169,7 +194,8 @@ elab_sim: $(PRESIM_GOAL) $(presim_hook) ## Run elaboration batch
 
 
 .PHONY: batch
-batch: $(PRESIM_GOAL) $(presim_hook) ## Run simulation batch
+## target to run simulation batch
+batch: $(PRESIM_GOAL) $(presim_hook)
 	@echo -e "$(batch_str)" > $(BATCH_SCRIPT)
 	@chmod +x $(BATCH_SCRIPT)
 	@echo -e "$O Starting batch simulation $C (see $(BLOG_DIR)/batch.log)"

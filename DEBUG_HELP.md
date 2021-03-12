@@ -17,7 +17,7 @@ Both of the above parameters put out a huge amount of data, so it is best to pip
 
 If the build is failing, it might be helpful to follow through these steps to identify where the failure might be.
 
-* Makefile inclusion, round 1: all of the hdl_build makefiles are processed and included, variables are set, target recipes and dependencies are evaluated
+* Makefile inclusion, round 1: all of the hdl_build makefiles are processed and included, variables are set, target recipes and dependencies are evaluated.
 
 * Dependency analysis depends on including a top level `.d` file.
     * For example, in `questa.mk` there is a `ifneq (,$(SIM_DEPS))` statement that is looking to see if the requested target is in the list of targets that should result in dependency analysis. If so, `-include $(DEP_DIR)/$(TOP_TB).questa.d` is the line that forces `.d` Makefile generation, followed by round 2.
@@ -35,8 +35,8 @@ If the build is failing, it might be helpful to follow through these steps to id
     * Once the top level `.o` files is done, all dependency work is complete.
 
 * `.o` recipes:
-    * The `questa.mk` `.o` recipe calls `run_questa.sh`. This script examines the filetype being run, prepares parameters for `pretty_run.sh` and executes. The `questa.mk` `.o` files result in either `vlog` commands for modules or `includes` by the `.d` file into the final vsim command.
-    * The `quartus.mk` `.o` recipe calls `run_quartus.sh`. This script examines the filetype being run, prepares parameters for `pretty_run.sh` and executes. The `questa.mk` `.o` files result in either individual tcl include files for modules, or the creation of `$(IP_MK)` makefiles for IP files.
+    * The `questa.mk` `.o` recipe selects a command to run based on filetype and calls `run_questa.sh`. This script prepares parameters for `pretty_run.sh` and executes. The `questa.mk` `.o` files result in either `vlog` commands for modules or `includes` by the `.d` file into the final vsim command.
+    * The `quartus.mk` `.o` recipe selects a command to run based on filetype and calls `run_quartus.sh`. This script prepares parameters for `pretty_run.sh` and executes. The `quartus.mk` `.o` files result in either individual tcl include files for modules, or the creation of `$(IP_MK)` makefiles for IP files.
 
 * Once the `.o` recipe is done, tool specific rules start to execute. Rules that are not dependent on `.o` output start in parallel with the `.o` rules.
     * Because `quartus.mk` includes a new layer of make with `-include $(IP_MK)`, make reassesses rules a third time after the creation of the `$(IP_MK)` file.
@@ -76,7 +76,7 @@ If there are errors with missing libraries, or module compilation reports a miss
 
 Debug library issues by checking the appropriate library directories exist, `.seen` and `.map` files exist, and that the mappings were added to `$(MS_INI)` file.
 
-## Unknown filetype to run_[questa/quartus]: bld/buildlogs
+## Unknown filetype in [questa/quartus]: bld/buildlogs
 
 This error means that the `.o` command was run, but the `.d` file either doesn't exist or the `.d` file failed to add the file dependency to the `.o` rule. If the `.d` doesn't exist, see the "Dependency missing from file" section. If the `.d` file is missing the `.o` rule, there is a bug in `.d` files generation.
 

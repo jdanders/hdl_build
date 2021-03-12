@@ -29,7 +29,7 @@ $(DEP_DIR)/%.d: | $(DEP_DIR) $(BLOG_DIR)
 
 # How to process each project file
 $(DEP_DIR)/%.o: | $(DEP_DIR) $(BLOG_DIR)
-	@$(SCRIPTS)/run_tool.sh $* $(word 1,$^) $(BLOG_DIR)
+	@$(SCRIPTS)/run_tool.sh '$(VLOG_MSG)' '$(VLOG_CMD)' '$(BLOG_DIR)/vlog_$*.log'
 	@touch $@
 
 # Cause make to create the top level .d makefile
@@ -79,7 +79,7 @@ Explanation of sections:
 
 The `.o` files are used to track when the processing completes for each design unit. In order to keep the Makefile as clean as possible, a `run_` script does the actual processing. The `run_` scripts get parameters indicating the module name and the path to the file the implements that module.
 
-Each `run_` script determines what it means to process each design unit. For simulation `run_questa.sh` runs `vlog` on design files. For synthesis `run_quartus.sh` add design filenames to the project `tcl` file, and creates new Makefiles for IP generation of `qsys` files.
+Each `.o` rule determines what it means to process each design unit. For simulation `questa.mk` runs `vlog` on design files. For synthesis `quartus.mk` adds design filenames to the project `tcl` file, and creates new Makefiles for IP generation of `qsys` files.
 
 After the `run_` script completes, the `.o` file is `touch`ed so that `make` can track the completion.
 
@@ -90,7 +90,7 @@ If the `TOP.d` file is always included, `make` can't do anything until that depe
 To work around this, tool makefiles include an `if` statement to only include the `TOP.d` file if the `make` target is on a list of rules. To create that list, `make` calls the following `bash` magic.
 
 ```make
-QUESTA_TARGETS := $(shell grep -oe "^[a-z].*:" $(BUILD_PATH)/make/questa.mk | grep -v clean | grep -v nuke | sed 's/:.*//')
+QUESTA_TARGETS := $(shell grep -oe "^[a-z].*:" $(BUILD_PATH)/siemens/questa.mk | grep -v clean | grep -v nuke | sed 's/:.*//')
 ```
 
 That greps all the simple targets from `questa.mk`, removes `clean` and `nuke` targets, and then removes everything after `:` from the line. This results in a list of targets that **should** include the `TOP.d` file.
@@ -160,11 +160,11 @@ The steps to make libraries:
 
 The above steps must be complete before a `vlog` compilation is done.
 
-## run_questa.sh
+## `.o` recipe and run_questa.sh
 
-The `run_questa.sh` script supports `.svh/.vh` and `.sv/.v` files.
+The `questa.mk` `.o` recipe supports `.svh/.vh` and `.sv/.v` files.
 
-Module files run `vlog` according to the `vlog_cmd` variable in `run_questa.sh`
+Module files run `vlog` according to the `vlog_cmd` variable in `questa.mk`
 
 Header files have a special inclusion in their `.d` files.
 
@@ -199,15 +199,13 @@ The other included project tcl files are:
 * `$(QSF_EXTRA)` variable from the Makefile
 * `$(IP_SEARCH_PATHS)` defined by include files
 
-## run_quartus.sh
+## '.o' recipe and run_quartus.sh
 
-The `run_quartus.sh` script supports `.svh/.vh` and `.sv/.v` files, as well as Quartus `.ip`, `.qsys`, and megawizard verilog files ending in `_qmw.v`.
+The `quartus.mk` `.o` recipe supports `.svh/.vh` and `.sv/.v` files, as well as Quartus `.ip`, `.qsys`, and megawizard verilog files ending in `_qmw.v`.
 
 For verilog sources, appropriate lines are added to the project `tcl` files.
 
-For IP source files, individual Makefiles are created using the templates in the `make` directory. The Makefiles create a `qip` target that runs a recipe to process the source IP file into a `.qip` file. That `.qip` file is both included in the project `tcl` file and added to the `$(DONE_DIR)/qgen_ip.done` dependency list. The `$(DONE_DIR)/qgen_ip.done` target must be complete before mapping/synthesis begins.
-
-The templates include several magic strings that are replaced as documented in `run_quartus.sh`.
+All IP Makefile templates and commands used for synthesis are stored in `synth_commands.mk`. The Makefiles create a `qip` target that runs a recipe to process the source IP file into a `.qip` file. That `.qip` file is both included in the project `tcl` file and added to the `$(DONE_DIR)/qgen_ip.done` dependency list. The `$(DONE_DIR)/qgen_ip.done` target must be complete before mapping/synthesis begins.
 
 ## Quartus processing
 
@@ -226,10 +224,18 @@ The suffixes of `_addon.mk` and `_custom.mk` will allow easy rebasing/merging of
 
 New makefiles benefit from following the following conventions:
 
-* Include `help` target comments, which are signaled by `##` on the target line.
-    * `mytarget: dep1 dep2 ## this is a help comment`
-    * Also helpful are header comments:
-    * `#--- My custom build rules: ## ----------------`
+* Include `help` target comments, which are signaled by `##` above the target line.
+
+```makefile
+## this is a help comment
+mytarget: dep1 dep2
+```
+* Also helpful are header comments:
+```makefile
+## ----------------- #
+# Questa build rules #
+```
+
 * If files are created, store files under the `$(BLD_DIR)` and add cleaning dependencies to `clean`, `cleanall`, or both.
 * If the process doesn't create an obvious output file, create and touch a file in the `$(DONE_DIR)`.
 * Include directory dependencies as order-only prerequisites
@@ -240,11 +246,13 @@ New makefiles benefit from following the following conventions:
 
 ## Basic requirements for adding make features
 
-A feature makefile only needs to hook into the build system at some point. For example, a feature that builds a set of source files before compiling would tie into the `$(predependency_hook)` of `build.mk`. You could create a file `hdl_build/make/build_source_addon.mk` with these contents:
+A feature makefile only needs to hook into the build system at some point. For example, a feature that builds a set of source files before compiling would tie into the `$(predependency_hook)` of `build.mk`. You could create a file `hdl_build/build_source_addon.mk` with these contents:
 
 ```make
 #-*- makefile -*-
-#--- extra source build rules: ## ----------------
+## ------------------ #
+# MyAddon build rules #
+
 SRC_BLD_DIR := $(BLD_DIR)/src_bld
 SRC_RESULT := $(SRC_BLD_DIR)/generated.sv
 
@@ -257,12 +265,13 @@ $(SRC_RESULT): src1.sv src2.sv | $(SRC_BLD_DIR)
 $(predependency_hook): $(SRC_RESULT)
 ```
 
-A full tool makefile needs to define its own dependency `.d` and output `.o` rules. Here is a bare template file `hdl_build/make/newtool_addon.mk`.
+A full tool makefile needs to define its own dependency `.d` and output `.o` rules. Here is a bare template file `hdl_build/newtool_addon.mk`.
 
 
 ```make
 #-*- makefile -*-
-#--- NewTool build rules: ## ----------------
+## ------------------ #
+# NewTool build rules #
 
 # Build dependencies for NEWTOOL_SUBSTITUTIONS variable
 # Compare against old results, and force update if different
@@ -301,7 +310,7 @@ $(DEP_DIR)/%.newtool.d: $(NEWTOOL_SUB_DONE) $(predependency_hook) | $(DEP_DIR) $
 
 # targets: grep lines that have ':', remove cleans, sed drop last character
 # Extract all targets for synthesis:
-NEWTOOL_TARGETS := $(shell grep -oe "^[a-z].*:" $(BUILD_PATH)/make/newtool_addon.mk | grep -v clean | grep -v nuke | sed 's/.$$//')
+NEWTOOL_TARGETS := $(shell grep -oe "^[a-z].*:" $(BUILD_PATH)/newtool_addon.mk | grep -v clean | grep -v nuke | sed 's/.$$//')
 
 # When the top .d file is included, make can't do anything until built.
 # Make sure it's included only when needed to avoid doing extra work
@@ -323,8 +332,8 @@ endif
 # The .o recipe is used to compile all files
 # The source file dependency is added in the .d file
 # The "$*" is replaced with the stem, which is the module name
-# The "$(word 2,$^)" is the second dependency, which will be the sv filename
-# Every '.o' tool rule set needs to be added to build.mk
+# The "$(word 1,$^)" is the second dependency, which will be the sv filename
+
 $(DEP_DIR)/%.newtool.o:  | $(DEP_DIR) $(BLOG_DIR)
 	@if [ ! -f $(DEP_DIR)/$*.newtool.d ]; then echo -e "$(RED)Dependency .d file missing for $*$(NC)"; exit 1; fi
 	@$(SCRIPTS)/run_newtool.sh $* $(word 1,$^) $(BLOG_DIR)

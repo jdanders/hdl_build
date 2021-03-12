@@ -1,11 +1,17 @@
 #-*- makefile -*-
-#--- Modelsim build rules: ## ----------------
+## -------------------- #
+#  Modelsim build rules #
 
-# To print variables that need full dependency includes
-# for example: make printmodelsim-SIM_LIB_LIST
-.PHONY: printmodelsim-%
-printmodelsim-%: ## use 'make printmodelsim-VAR_NAME' to print variable after modelsim processing
-	@echo '$* = $($*)'
+ifndef TOP_TB
+  ifdef TOP_SIM
+## identify the top module to be simulated with `TOP_TB`. If not set, `TOP` will be used.
+    TOP_TB := $(TOP_SIM)
+  else
+    ifdef TOP
+      TOP_TB := $(TOP)
+    endif
+  endif
+endif
 
 SIM_LIB_DONE := $(DONE_DIR)/sim_lib_map
 SIM_SUB_DONE := $(DONE_DIR)/sim_substitutions.done
@@ -15,6 +21,8 @@ SIM_LIB_DIR := $(BLD_DIR)/simlib
 ##################### Module dependency targets ##############################
 
 MAKEDEP_TOOL_MODELSIM := "modelsim"
+## a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `example-subs.yml`
+# SIM_SUBSTITUTIONS: set in upper Makefile
 ifdef SIM_SUBSTITUTIONS
   SUBS_MODELSIM := --subsfilelist '$(SIM_SUBSTITUTIONS)'
 endif
@@ -25,7 +33,7 @@ endif
 # The '%' becomes the module name
 # The '$*' is replaced by that module name
 $(DEP_DIR)/%.modelsim.d: $(SIM_SUB_DONE) $(predependency_hook) | $(DEP_DIR) $(BLOG_DIR)
-	@if [ -d "$(SRC_BASE_DIR)" ]; then\
+	@if [ -d $(SRC_BASE_DIR) ]; then\
 	  $(BUILD_SCRIPTS)/run_full_log_on_err.sh  \
 	   "$(CLEAR)Identifying dependencies for $*$(UPDATE)" \
 	   "$(MAKEDEPEND_CMD) $(SUBS_MODELSIM) $(MAKEDEP_TOOL_MODELSIM) $*" \
@@ -73,6 +81,9 @@ MS_INI_PARAM := -modelsimini $(MS_INI)
 SIM_TOP_DEPS := $(sort $(strip $($(TOP_TB)_DEPS)))
 SIM_LIB_LIST := $(shell echo " $(SIM_TOP_DEPS)" | sed -E 's| +(\w)| -L \1|g') -L work $(SIM_LIB_APPEND)
 
+## library string to appned to the library list, like `-L $(SIM_LIB_DIR)/customlib`
+# SIM_LIB_APPEND : set in upper Makefile
+
 # Gather all PARAM_ environment variables and make a parameter string
 # First filter all variables to find all that start with PARAM_
 MAKE_PARAMS := $(filter PARAM_%,$(.VARIABLES))
@@ -83,14 +94,18 @@ SIM_PARAM := $(foreach pname, $(MAKE_PARAMS),-G$(subst PARAM_,,$(pname))=$($(pna
 ##################### Dependency targets ##############################
 # Create rules to determine dependencies and create compile recipes for .sv
 .PHONY: deps
-deps: $(DEP_DIR)/$(TOP_TB).modelsim.d ## Figure out sim dependencies only
+## target to figure out sim dependencies only
+deps: $(DEP_DIR)/$(TOP_TB).modelsim.d
 .PHONY: comp
-comp: $(MS_INI) $(DEP_DIR)/$(TOP_TB).modelsim.o $(precomp_hook) ## Compile simulation files
+## target to compile simulation files
+comp: $(MS_INI) $(DEP_DIR)/$(TOP_TB).modelsim.o $(precomp_hook)
 .PHONY: filelist_sim
-filelist_sim: $(DEP_DIR)/$(TOP_TB).modelsim.d ## print list of files used in sim
+## target to print list of files used in sim
+filelist_sim: $(DEP_DIR)/$(TOP_TB).modelsim.d
 	@grep "\.d:" $(DEP_DIR)/* | cut -d " " -f 2 | sort | uniq
 .PHONY: modules_sim
-modules_sim: $(DEP_DIR)/$(TOP_TB).modelsim.d ## print list of modules used in sim
+## target to print list of modules used in sim
+modules_sim: $(DEP_DIR)/$(TOP_TB).modelsim.d
 	@echo $(SIM_TOP_DEPS)
 
 
@@ -115,5 +130,12 @@ $(DEP_DIR)/%.modelsim.o: $(SIM_LIB_DONE) | $(DEP_DIR) $(BLOG_DIR)
 
 PRESIM_GOAL := comp
 TOP_COMP := $(TOP_TB)
+
+# To print variables that need full dependency includes
+# for example: make printmodelsim-SIM_LIB_LIST
+.PHONY: printmodelsim-%
+## use 'make printmodelsim-VAR_NAME' to print variable after modelsim processing
+printmodelsim-%:
+	@echo '$* = $($*)'
 
 include $(HDL_BUILD_PATH)/siemens/siemens_common.mk

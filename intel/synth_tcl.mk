@@ -11,7 +11,7 @@ define global_tcl
 project_new $(PROJECT) -overwrite
 set_global_assignment -name FAMILY $(FAMILY)
 set_global_assignment -name DEVICE $(DEVICE)
-set_global_assignment -name TOP_LEVEL_ENTITY $(TOP)
+set_global_assignment -name TOP_LEVEL_ENTITY $(TOP_SYNTH)
 
 
 set_global_assignment -name TIMEQUEST_DO_CCPP_REMOVAL ON
@@ -48,7 +48,7 @@ endef
 
 define sdc_tcl
 if { [file exists \"$(ABSPATH_SDC_FILE)\"] == 1} {
-    set_global_assignment -name SDC_ENTITY_FILE $(ABSPATH_SDC_FILE) -entity $(TOP) -no_sdc_promotion
+    set_global_assignment -name SDC_ENTITY_FILE $(ABSPATH_SDC_FILE) -entity $(TOP_SYNTH) -no_sdc_promotion
 }
 set_global_assignment -name SDC_FILE $(HDL_BUILD_PATH)/intel/jtag.sdc
 

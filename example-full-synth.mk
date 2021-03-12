@@ -16,7 +16,7 @@ ARCHIVE_DIR := /build/archives
 ARCHIVE_SUB_DIR := testbuilds/$(shell date +"%Y_%m_%d-%H.%M")-$(shell git rev-parse --abbrev-ref HEAD)
 ARCHIVE_FILE_PREFIX := soc_
 
-TOP := soc_top
+TOP_SYNTH := soc_top
 QUARTUS_FILE := ../soc_make.tcl
 SDC_FILE := ../soc.sdc
 STP_FILE := $(STP_DIR)/soc.stp
