@@ -230,7 +230,9 @@ New makefiles benefit from following the following conventions:
 ## this is a help comment
 mytarget: dep1 dep2
 ```
+
 * Also helpful are header comments:
+
 ```makefile
 ## ----------------- #
 # Questa build rules #
