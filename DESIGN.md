@@ -192,10 +192,10 @@ Each needed dependency is added to an independent `tcl` script file in the `$(TC
 
 The other included project tcl files are:
 
-* `$(GLOBAL_SYNTH_SETTINGS)` defines Quartus settings that are global for all builds
+* `$(synth_global)` defines Quartus settings that are global for all builds
 * `$(STD_V_PRO_MACRO_FILE)` defines the `STD_QUARTUS` macro
 * `$(PARAMETER_TCL)` defines the parameters specified in the Makefile
-* `$(SDC_SETTINGS)` defines the SDC timing parameters
+* `$(synth_sdc)` defines the SDC timing parameters
 * `$(QSF_EXTRA)` variable from the Makefile
 * `$(IP_SEARCH_PATHS)` defined by include files
 
