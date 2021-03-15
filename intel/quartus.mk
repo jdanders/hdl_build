@@ -26,7 +26,7 @@ $(presynth_hook): | $(DONE_DIR)
 
 post_qgen_ip_hook := $(DONE_DIR)/post_qgen_ip_hook.done
 ## target hook to run after ip generaation is done, before mapping
-$(post_qgen_ip_hook): | $(DONE_DIR)
+$(post_qgen_ip_hook): $(DONE_DIR)/qgen_ip.done | $(DONE_DIR)
 	@touch $@
 
 SYNTH_SUB_DONE := $(DONE_DIR)/synth_substitutions.done
@@ -374,9 +374,14 @@ $(QSF_DONE): $(PROJ_TCL) $(GIT_INFO_FILE) | $(SYNTH_DIR) $(DONE_DIR)
 
 .PHONY: quartus
 ## target to open Quartus GUI
-quartus: $(QSF_DONE)
+quartus: $(DONE_DIR)/synth_ready.done
 	$(STP_CHECK)
-# Bring back "runclean" command if there is a problem here
+	quartus $(PROJECT).qpf &
+
+.PHONY: quartus_fast
+## target to open Quartus GUI without waiting for ip generation
+quartus_fast: $(QSF_DONE)
+	$(STP_CHECK)
 	quartus $(PROJECT).qpf &
 
 
@@ -416,10 +421,14 @@ $(DONE_DIR)/qgen_ip.done: $(IP_MK)
 	@touch $@
 
 
+$(DONE_DIR)/synth_ready.done: $(DONE_DIR)/qgen_ip.done $(post_qgen_ip_hook)
+	@touch $@
+
+
 .PHONY: elab_synth
 ## target to run through Quartus analysis and elaboration
-elab_synth: $(DONE_DIR)/elab_synth.done $(post_qgen_ip_hook)
-$(DONE_DIR)/elab_synth.done: $(DONE_DIR)/qgen_ip.done
+elab_synth: $(DONE_DIR)/elab_synth.done
+$(DONE_DIR)/elab_synth.done: $(DONE_DIR)/synth_ready.done
 	@$(BUILD_SCRIPTS)/run_print_err_only.sh \
 	   "$O Elaborating (started $(DATE)) $C (see $(BLOG_DIR)/build_elaboration.log)" \
 	   "$(QMAP) --analysis_and_elaboration $(MAP_ARGS) $(PROJECT)" \
@@ -431,7 +440,7 @@ $(DONE_DIR)/elab_synth.done: $(DONE_DIR)/qgen_ip.done
 ## target to run through Quartus synthesis/mapping
 map: $(DONE_DIR)/merge.done
 
-$(DONE_DIR)/map.done: $(DONE_DIR)/qgen_ip.done $(post_qgen_ip_hook)
+$(DONE_DIR)/map.done: $(DONE_DIR)/synth_ready.done
 	$(STP_CHECK)
 	@$(BUILD_SCRIPTS)/run_print_err_only.sh \
 	   "$O Synthesis (started $(DATE)) $C (see $(BLOG_DIR)/build_map.log)" \

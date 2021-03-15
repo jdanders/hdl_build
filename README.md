@@ -149,6 +149,7 @@ The **`quartus.mk`** file provides Quartus related targets and consumes the depe
 * **`synth_tcl.mk`**: all QSF files get the values set in `synth_tcl.mk` global settings, including jtag.sdc
 * **`project`**: target to create Quartus project
 * **`quartus`**: target to open Quartus GUI
+* **`quartus_fast`**: target to open Quartus GUI without waiting for ip generation
 * **`git_info`**: target to archive git info in project directory
 * **`ipgen`**: target to generate Quartus IP
 * **`elab_synth`**: target to run through Quartus analysis and elaboration
