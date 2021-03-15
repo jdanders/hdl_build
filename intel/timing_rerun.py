@@ -167,15 +167,15 @@ def main():
                                      map_dir, tmp_dir, args.num)
     # Clean up and report
     run('rm -rf bld/*_mapped')
+    worst = run(script_dir + '/timing_worst_paths.py').decode(errors='ignore')
     if slack_history:
         slack_history.sort()
         print("\n")
         print(f"Slack history of {args.project} is:\n-"
               + "\n-".join(slack_history))
-    worst = run(script_dir + '/timing_worst_paths.py').decode(errors='ignore')
-    print("\nMost frequent worst timing paths:")
-    for ii in worst.splitlines()[:12]:
-        print(ii)
+        print("\nMost frequent worst timing paths:")
+        for ii in worst.splitlines()[:12]:
+            print(ii)
     if timing_result:
         open(os.path.join(syn_dir, 'TQ_worst_paths.txt'), 'w').write(worst)
     else:
