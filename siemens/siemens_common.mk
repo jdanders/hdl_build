@@ -23,7 +23,6 @@ $(presim_hook): | $(DONE_DIR)
 
 TRANSCRIPT := $(BLD_DIR)/transcript
 WORK := $(SIM_LIB_DIR)/work
-PARAMETER_DONE := $(DONE_DIR)/parameters.done
 RUN_SCRIPT := $(BLD_DIR)/run.do
 BATCH_SCRIPT := $(BLD_DIR)/batch.do
 REDO_SCRIPT := $(BLD_DIR)/redo.do
@@ -62,7 +61,7 @@ VLOG_PARAMS := $(VLOG_OPTIONS) $(MS_INI_PARAM) +initreg+0 +initmem+0 -error 2182
 
 WLF_PARAM := -wlf $(BLD_DIR)/vsim.wlf
 # set VSIM_COVER_OPT=-coverage to run a coverage test (or use smake)
-VSIM_PARAMS := -msgmode both -t 1ps -permit_unmatched_virtual_intf $(SUPRESS_PARAMS) $(WLF_PARAM) $(MS_INI_PARAM) $(VSIM_COVER_OPT) $(VSIM_OPTIONS) $(VSIM_LDFLAGS)
+VSIM_PARAMS := -msgmode both -t 1ps -permit_unmatched_virtual_intf $(MSIM_VSIM) $(SUPRESS_PARAMS) $(WLF_PARAM) $(MS_INI_PARAM) $(VSIM_COVER_OPT) $(VSIM_OPTIONS) $(VSIM_LDFLAGS)
 
 SIM_LAST_DEPS := $(SIM_LIB_DIR)/sim_top_deps
 
@@ -119,7 +118,7 @@ $(SIM_LAST_DEPS): $(NEW_SIM_DEPS)
 	@touch $@
 
 # Create vlib and a map file for each dependency
-$(SIM_LIB_DIR)/maps_made: $(presimlib_hook) $(SIM_LAST_DEPS) $(MS_INI) | $(SIM_LIB_DIR)
+$(SIM_LIB_DIR)/maps_made: $(presimlib_hook) $(SIM_LAST_DEPS) | $(SIM_LIB_DIR)
 	@echo "Updating sim lib map list"
 	@for ii in $(SIM_TOP_DEPS); do if [ ! -f  $(SIM_LIB_DIR)/$${ii}.seen ]; then \
 	    touch $(SIM_LIB_DIR)/$${ii}.seen; \
@@ -174,7 +173,7 @@ include $(HDL_BUILD_PATH)/siemens/do_files.mk
 .PHONY: sim
 # to run make commands cleanly in GUI, remove -j flags
 ## target to run simulation in GUI
-sim: $(PRESIM_GOAL) $(presim_hook)
+sim: $(PARAMETER_DONE) $(PRESIM_GOAL) $(presim_hook)
 	@echo -e "$(run_str)" > $(RUN_SCRIPT)
 	@echo -e '$(redo_str)' > $(REDO_SCRIPT)
 	@echo -e "$O Starting simulation $C"
@@ -183,7 +182,7 @@ sim: $(PRESIM_GOAL) $(presim_hook)
 
 .PHONY: elab_sim
 ## target to run elaboration batch
-elab_sim: $(PRESIM_GOAL) $(presim_hook)
+elab_sim: $(PARAMETER_DONE) $(PRESIM_GOAL) $(presim_hook)
 	@echo -e "$(elab_str)" > $(BATCH_SCRIPT)
 	@chmod +x $(BATCH_SCRIPT)
 	@echo -e "$O Starting batch simulation $C (see $(BLOG_DIR)/batch.log)"
@@ -193,7 +192,7 @@ elab_sim: $(PRESIM_GOAL) $(presim_hook)
 
 .PHONY: batch
 ## target to run simulation batch
-batch: $(PRESIM_GOAL) $(presim_hook)
+batch: $(PARAMETER_DONE) $(PRESIM_GOAL) $(presim_hook)
 	@echo -e "$(batch_str)" > $(BATCH_SCRIPT)
 	@chmod +x $(BATCH_SCRIPT)
 	@echo -e "$O Starting batch simulation $C (see $(BLOG_DIR)/batch.log)"

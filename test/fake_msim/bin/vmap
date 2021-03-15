@@ -1,0 +1,5 @@
+#!/bin/bash
+BASEDIR=$(dirname "$0")
+if [ "$1" == "-c" ]; then
+    cp ${BASEDIR}/../modelsim.ini .
+fi

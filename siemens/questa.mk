@@ -107,6 +107,7 @@ MAKE_PARAMS := $(filter PARAM_%,$(.VARIABLES))
 # Next change them from PARAM_NAME to NAME and grab their values
 # This takes PARAM_NAME=value and changes it to -GNAME=value
 SIM_PARAM := $(foreach pname, $(MAKE_PARAMS),-G$(subst PARAM_,,$(pname))=$($(pname)))
+PARAMETER_DONE := $(DONE_DIR)/parameters.done
 
 ##################### Dependency targets ##############################
 # Create rules to determine dependencies and create compile recipes for .sv

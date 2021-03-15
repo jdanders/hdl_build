@@ -1,4 +1,4 @@
 #!/bin/bash
 
-mkdir -p $(dirname ${PROJECT})
-cp $2 ${PROJECT}.qsf
+mkdir -p bld/mod1/mod1
+cp $2 bld/mod1/mod1.qsf
