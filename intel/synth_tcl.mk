@@ -48,7 +48,11 @@ endef
 
 define sdc_tcl
 if { [file exists \"$(ABSPATH_SDC_FILE)\"] == 1} {
+  if { \"$(PRO_VERSION)\" == \"pro\" } {
     set_global_assignment -name SDC_ENTITY_FILE $(ABSPATH_SDC_FILE) -entity $(TOP_SYNTH) -no_sdc_promotion
+  } else {
+    set_global_assignment -name SDC_FILE $(ABSPATH_SDC_FILE)
+  }
 }
 set_global_assignment -name SDC_FILE $(HDL_BUILD_PATH)/intel/jtag.sdc
 
