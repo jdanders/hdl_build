@@ -94,12 +94,10 @@ $(PARAMETER_DONE): $(SIM_PARAM_DEP)
 	@touch $@
 
 
-TOOL_MODELSIM.INI := $(abspath $(shell which vsim || echo /dev/null)/../../modelsim.ini)
 $(MS_INI): $(SRC_MAKEFILES) | $(BLD_DIR) $(SIM_LIB_DIR)
 	@echo;echo -e "$O Creating sim environment $C"
-	@if [ -f $(TOOL_MODELSIM.INI) ]; then \
-	  cp $(TOOL_MODELSIM.INI) $(MS_INI); \
-	else echo -e "$(RED)Could not find installed modelsim.ini$(NC)"; false; \
+	@if which vmap &> /dev/null; then vmap -c > /dev/null; mv modelsim.ini $(MS_INI);\
+	 else echo -e "$(RED)Could not find vmap on current path$(NC)"; false; \
 	fi
 	@chmod +w $(MS_INI)
 	@rm -rf $(WORK) && vlib $(WORK)
@@ -121,7 +119,7 @@ $(SIM_LAST_DEPS): $(NEW_SIM_DEPS)
 	@touch $@
 
 # Create vlib and a map file for each dependency
-$(SIM_LIB_DIR)/maps_made: $(presimlib_hook) $(SIM_LAST_DEPS) | $(SIM_LIB_DIR)
+$(SIM_LIB_DIR)/maps_made: $(presimlib_hook) $(SIM_LAST_DEPS) $(MS_INI) | $(SIM_LIB_DIR)
 	@echo "Updating sim lib map list"
 	@for ii in $(SIM_TOP_DEPS); do if [ ! -f  $(SIM_LIB_DIR)/$${ii}.seen ]; then \
 	    touch $(SIM_LIB_DIR)/$${ii}.seen; \
