@@ -15,27 +15,23 @@ function leave() {
     exit 0
 }
 
-# Check for running makes, but exclude current one
-GPPID=$(ps -fp $PPID -o ppid=)
-pgrep make | grep -v $PPID | grep -v $GPPID > $tmpfile
-
 # Check for running quartus tools
-for cmdname in quartus_sh quartus_ipgenerate quartus_map quartus_syn quartus_cdb quartus_fit quartus_asm quartus_sta; do
+for cmdname in quartus_sh quartus_ipgenerate qsys-generate quartus_map quartus_syn quartus_cdb quartus_fit quartus_asm quartus_sta; do
     if pgrep ${cmdname} > /dev/null; then
         for pid in $(pgrep ${cmdname}); do
             search_pid=${pid}
             # traverse the parentage of pid to find make call
-            while ! echo $(ps -fp ${search_pid} -o comm=) | grep -q make; do
+            while ! [[ "${search_pid}" == "" || "${search_pid}" -lt 1 ]]; do
                 if [[ "${search_pid}" == "$PPID" ]]; then
                     # Common ancestor, ignore
                     break
                 else
-                    search_pid=$(ps -fp ${search_pid} -o ppid=)
-                    if [[ "${search_pid}" == "" || "${search_pid}" -lt 1 ]]; then
-                        # Not related, add to list
+                    if echo $(ps -fp ${search_pid} -o comm=) | grep -q make; then
+                        # This is the make call, but not the $PPID, add to list
                         echo ${pid} >> $tmpfile
                         break
                     fi
+                    search_pid=$(ps -fp ${search_pid} -o ppid=)
                 fi
             done
         done
@@ -49,6 +45,6 @@ if [ -s $tmpfile ]; then
     xargs -r ps -wwo lstart,user:12,pid,cmd < $tmpfile
     echo
     echo "Type CTRL+C to exit, or wait to proceed"
-    sleep 3
+    sleep 1
     echo "Proceeding..."
 fi
