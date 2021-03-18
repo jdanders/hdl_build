@@ -18,5 +18,5 @@ else
  endif
 endif
 # O for open color, C for close color
-O:=$(LB)\#
-C:=\#$(NC)
+export O:=$(LB)\#
+export C:=\#$(NC)
