@@ -60,7 +60,7 @@ ifneq (,$(SIM_DEPS))
   endif
   ifdef	TOP_TB
     -include $(DEP_DIR)/$(TOP_TB).modelsim.d
-		_TOP := $(TOP_TB)
+    _TOP := $(TOP_TB)
   endif
 endif
 

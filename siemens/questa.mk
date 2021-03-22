@@ -67,7 +67,7 @@ ifneq (,$(SIM_DEPS))
   endif
   ifdef	TOP_TB
     -include $(DEP_DIR)/$(TOP_TB).questa.d
-		_TOP := $(TOP_TB)
+    _TOP := $(TOP_TB)
   endif
 endif
 AC_DEPS := $(filter $(AC_TARGETS),$(MAKECMDGOALS))
@@ -79,7 +79,7 @@ ifneq (,$(AC_DEPS))
   endif
   ifdef	TOP_AC
     -include $(DEP_DIR)/$(TOP_AC).questa.d
-		_TOP := $(TOP_AC)
+    _TOP := $(TOP_AC)
   endif
 endif
 

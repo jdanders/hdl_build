@@ -98,8 +98,8 @@ ifdef SIM_TOOL
   include $(HDL_BUILD_PATH)/siemens/modelsim.mk
  else ifeq (questa,$(findstring questa,$(SIM_TOOL)))
   include $(HDL_BUILD_PATH)/siemens/questa.mk
-else ifeq (qverify,$(findstring qverify,$(SIM_TOOL)))
-include $(HDL_BUILD_PATH)/siemens/questa.mk
+ else ifeq (qverify,$(findstring qverify,$(SIM_TOOL)))
+  include $(HDL_BUILD_PATH)/siemens/questa.mk
  endif
 endif
 
