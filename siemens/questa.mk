@@ -22,7 +22,7 @@ AC_REPORT := $(AC_OUT_DIR)/autocheck_verify.rpt
 AC_DONE := $(DONE_DIR)/ac.done
 
 ifndef AC_DIRECTIVES
-## Need to create build/ac_directives.tcl or point to another file in Makefile
+## Need to create ac_directives.tcl or point to another file in Makefile
   AC_DIRECTIVES := ac_directives.tcl
 endif
 
