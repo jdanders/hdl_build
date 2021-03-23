@@ -18,10 +18,11 @@ SIM_SUB_DONE := $(DONE_DIR)/sim_substitutions.done
 SIM_LIB_DIR := $(BLD_DIR)/simlib
 AC_SCRIPT := $(BLD_DIR)/ac.do
 AC_OUT_DIR := $(BLD_DIR)/ac_output
+AC_REPORT := $(AC_OUT_DIR)/autocheck_verify.rpt
 AC_DONE := $(DONE_DIR)/ac.done
 
 ifndef AC_DIRECTIVES
-  AC_DIRECTIVES = ac_directives.tcl
+  AC_DIRECTIVES := ac_directives.tcl
 endif
 
 ##################### Module dependency targets ##############################
@@ -53,8 +54,8 @@ $(DEP_DIR)/%.questa.d: $(SIM_SUB_DONE) $(predependency_hook) | $(DEP_DIR) $(BLOG
 
 # targets: grep lines that have ':', remove cleans, sed drop last character
 # Extract all targets for sim:
-QUESTA_TARGETS := $(shell grep -ohe "^[a-z].*:" $(HDL_BUILD_PATH)/siemens/*.mk | grep -v autocheck | grep -v clean | grep -v nuke | sed 's/:.*//')
-AC_TARGETS := autocheck ac ac_gui
+QUESTA_TARGETS := $(shell grep -ohe "^[a-z].*:" $(HDL_BUILD_PATH)/siemens/*.mk | grep -v clean | grep -v nuke | sed 's/:.*//')
+AC_TARGETS := ac ac_batch autocheck autocheck_batch
 
 # When the top .d file is included, make can't do anything until built.
 # Make sure it's included only when needed to avoid doing extra work
@@ -70,10 +71,9 @@ ifneq (,$(SIM_DEPS))
     _TOP := $(TOP_TB)
   endif
 endif
+
 AC_DEPS := $(filter $(AC_TARGETS),$(MAKECMDGOALS))
 ifneq (,$(AC_DEPS))
-  # The top .d file must be called out specifically to get the ball rolling
-  # Otherwise nothing happens because there are no matches to the wildcard rule
   ifndef TOP_AC
     $(error No TOP_AC module defined)
   endif
@@ -177,16 +177,13 @@ $(DEP_DIR)/%.questa.o: $(SIM_LIB_DONE) | $(DEP_DIR) $(BLOG_DIR)
 	else echo "Unknown filetype: $(word 2,$^)"; echo "$^"; exit 1; fi; fi;
 	@touch $@
 
-AC_CMD = qverify -c -do $(AC_SCRIPT) -od $(AC_OUT_DIR) -modelsimini $(MS_INI)
+AC_CMD := qverify -c -do $(AC_SCRIPT) -od $(AC_OUT_DIR) -modelsimini $(MS_INI)
 AC_MSG := Running Autocheck
 $(AC_DONE): $(MS_INI) $(DEP_DIR)/$(_TOP).questa.o $(precomp_hook) $(AC_DIRECTIVES)
 	@printf "$(autocheck_str)" > $(AC_SCRIPT)
-	@echo "Autocheck dependencies changed";
 	@$(HDL_BUILD_PATH)/siemens/run_siemens.sh '$(AC_MSG)' '$(AC_CMD)' '$(BLOG_DIR)/autocheck.log';
 	@echo -e "$O Starting autocheck simulation $C (see $(BLOG_DIR)/autocheck.log)"
 	@touch $@
-
-AC_TOTAL = $(shell grep "AC Total" $(AC_OUT_DIR)/autocheck_verify.rpt | tr -s ' ' | cut -d ' ' -f 4)
 
 PRESIM_GOAL := vopt
 TOP_COMP := $(_TOP)_opt

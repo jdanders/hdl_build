@@ -208,7 +208,7 @@ autocheck_batch: ac_batch
 .PHONY: ac_batch
 ## Run autocheck in console only
 ac_batch: $(AC_DONE)
-	@-$(HDL_BUILD_PATH)/siemens/ac_pretty.sh '$(AC_OUT_DIR)' '$(AC_TOTAL)';
+	@-$(HDL_BUILD_PATH)/siemens/ac_pretty.sh '$(AC_REPORT)';
 
 .PHONY: autocheck
 ## Run autocheck GUI
