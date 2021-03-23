@@ -72,6 +72,7 @@ endef
 
 # For help run command: qverify -c -do "autocheck compile -help"
 define autocheck
+onerror {exit 1}
 do $(AC_DIRECTIVES)
 autocheck compile -d $(SIM_LIB_DIR)/$(_TOP).$(_TOP) $(SIM_LIB_LIST)
 autocheck verify

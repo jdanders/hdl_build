@@ -22,6 +22,7 @@ AC_REPORT := $(AC_OUT_DIR)/autocheck_verify.rpt
 AC_DONE := $(DONE_DIR)/ac.done
 
 ifndef AC_DIRECTIVES
+## Need to create this file in build folder or point to another file in Makefile
   AC_DIRECTIVES := ac_directives.tcl
 endif
 
@@ -66,7 +67,7 @@ ifneq (,$(SIM_DEPS))
   ifndef TOP_TB
     $(error No TOP_TB module defined)
   endif
-  ifdef	TOP_TB
+  ifdef TOP_TB
     -include $(DEP_DIR)/$(TOP_TB).questa.d
     _TOP := $(TOP_TB)
   endif
@@ -77,7 +78,7 @@ ifneq (,$(AC_DEPS))
   ifndef TOP_AC
     $(error No TOP_AC module defined)
   endif
-  ifdef	TOP_AC
+  ifdef TOP_AC
     -include $(DEP_DIR)/$(TOP_AC).questa.d
     _TOP := $(TOP_AC)
   endif
@@ -178,11 +179,10 @@ $(DEP_DIR)/%.questa.o: $(SIM_LIB_DONE) | $(DEP_DIR) $(BLOG_DIR)
 	@touch $@
 
 AC_CMD := qverify -c -do $(AC_SCRIPT) -od $(AC_OUT_DIR) -modelsimini $(MS_INI)
-AC_MSG := Running Autocheck
+AC_MSG := $O Starting autocheck simulation $C (see $(BLOG_DIR)/autocheck.log)
 $(AC_DONE): $(MS_INI) $(DEP_DIR)/$(_TOP).questa.o $(precomp_hook) $(AC_DIRECTIVES)
 	@printf "$(autocheck_str)" > $(AC_SCRIPT)
 	@$(HDL_BUILD_PATH)/siemens/run_siemens.sh '$(AC_MSG)' '$(AC_CMD)' '$(BLOG_DIR)/autocheck.log';
-	@echo -e "$O Starting autocheck simulation $C (see $(BLOG_DIR)/autocheck.log)"
 	@touch $@
 
 PRESIM_GOAL := vopt

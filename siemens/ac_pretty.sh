@@ -8,9 +8,9 @@ grep "Found" ${ac_report}
 grep "AC Total" ${ac_report}
 echo -----------------------------------------------------------------
 if [[ '0' == ${ac_total} ]]; then
-  echo -e "${GREEN}Autocheck found no new issues${NC}"
+  echo -e "${GREEN}# Autocheck found no new issues${C}"
   c=0;
-else echo -e "${RED}Autocheck found ${ac_total} new issue(s)${NC}"
+else echo -e "${RED}# Autocheck found ${ac_total} new issue(s)${C}"
   c=1;
 fi
 echo -e "${O} Autocheck finished ${C} (see ${ac_report})"

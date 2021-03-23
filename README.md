@@ -99,7 +99,8 @@ The **`build.mk`** file provides the entry point and the basic structure for the
 
 The **`modelsim.mk`** or **`questa.mk`** file provides simulator related targets and consumes the dependency analysis results of **`build.mk`**.
 
-* **`TOP_SIM`**: identify the top module to be simulated with `TOP_SIM`. If not set, `TOP` will be used.
+* **`TOP_TB`**: identify the top module to be simulated with `TOP_TB`. If not set, `TOP` will be used.
+* **`AC_DIRECTIVES`**: Need to create this file in build folder or point to another file in Makefile
 * **`SIM_SUBSTITUTIONS`**: a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `example-subs.yml`
     * `SIM_SUBSTITUTIONS = $(shell git_root_path sim_models/sim_all_ipcores.yml) eth_1g:$(shell git_root_path sim_models/1g_sim_model.sv ignorememodule:`
 * **`SIM_LIB_APPEND`**: library string to appned to the library list, like `-L $(SIM_LIB_DIR)/customlib`
@@ -122,6 +123,10 @@ The **`modelsim.mk`** or **`questa.mk`** file provides simulator related targets
 * **`sim`**: target to run simulation in GUI
 * **`elab_sim`**: target to run elaboration batch
 * **`batch`**: target to run simulation batch
+* **`autocheck_batch`**: Run autocheck in console only
+* **`ac_batch`**: Run autocheck in console only
+* **`autocheck`**: Run autocheck GUI
+* **`ac`**: Run autocheck GUI
 
 
 ### quartus.mk
