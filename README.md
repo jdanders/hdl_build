@@ -1,3 +1,5 @@
+[![Toolless Test](https://github.com/jdanders/hdl_build/actions/workflows/runtest.yml/badge.svg?branch=master)](https://github.com/jdanders/hdl_build/actions/workflows/runtest.yml)
+
 # Introduction
 
 The build system is built on GNU Makefile with helper scripts that provide the following functionality:

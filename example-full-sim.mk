@@ -30,7 +30,7 @@ v3ROOT := $(SRC_BASE_DIR)/ip_cores/flash/micro_stack_2g
 $(DONE_DIR)/flash_v3model: $(v3ROOT)/dut/code/28F512.v $(v3ROOT)/dut/stack_2G.v $(v3ROOT)/CFImemory1Gb_top.vmf $(v3ROOT)/memory_0.vmf $(v3ROOT)/memory_1.vmf |$(DONE_DIR) $(SIM_LIB_DIR)
 	echo "v3model = $(SIM_LIB_DIR)/v3model" > $(SIM_LIB_DIR)/v3model.map
 	vlib $(SIM_LIB_DIR)/v3model
-	vlog -work $(SIM_LIB_DIR)/v3model $(VLOG_PARAMS) $(MODEL_TIMEOUT_OVERRIDE) "+incdir+$(v3ROOT)" $(DEFAULT_SIM_LIB) $(v3ROOT)/dut/code/28F512P30.v $(v3ROOT)/dut/stack_2G.v
+	vlog -work $(SIM_LIB_DIR)/v3model $(VLOG_PARAMS) $(MODEL_TIMEOUT_OVERRIDE) "+incdir+$(v3ROOT)" $(v3ROOT)/dut/code/28F512P30.v $(v3ROOT)/dut/stack_2G.v
 	cp $(v3ROOT)/CFImemory1Gb_top.vmf .
 	cp $(v3ROOT)/memory_0.vmf .
 	cp $(v3ROOT)/memory_1.vmf .
