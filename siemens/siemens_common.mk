@@ -210,7 +210,7 @@ ac_batch: autocheck_batch
 
 .PHONY: autocheck
 ## Run autocheck GUI
-autocheck: autocheck_batch
+autocheck: $(AC_DONE)
 	@-$(HDL_BUILD_PATH)/siemens/ac_pretty.sh '$(AC_REPORT)';
 	@echo -e "$O Starting autocheck GUI $C"
 	@cd $(AC_OUT_DIR) && qverify autocheck_verify.db &
