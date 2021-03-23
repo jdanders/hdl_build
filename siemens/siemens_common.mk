@@ -201,24 +201,20 @@ batch: $(PARAMETER_DONE) $(PRESIM_GOAL) $(presim_hook)
 	     echo -e "$(GREEN)# Simulation successful $C"; \
 	 fi;
 
+## Run autocheck in console only
 .PHONY: autocheck_batch
-## Run autocheck in console only
-autocheck_batch: ac_batch
-
-.PHONY: ac_batch
-## Run autocheck in console only
-ac_batch: $(AC_DONE)
+autocheck_batch: $(AC_DONE)
 	@-$(HDL_BUILD_PATH)/siemens/ac_pretty.sh '$(AC_REPORT)';
+.PHONY: ac_batch
+ac_batch: autocheck_batch
 
+## Run autocheck GUI
 .PHONY: autocheck
-## Run autocheck GUI
-autocheck: ac
-
-.PHONY: ac
-## Run autocheck GUI
-ac: ac_batch
+autocheck: autocheck_batch
 	@echo -e "$O Starting autocheck GUI $C (see $(BLOG_DIR)/autocheck.log)"
 	@cd $(AC_OUT_DIR) && qverify autocheck_verify.db &
+.PHONY: ac
+ac: autocheck
 
 .PHONY: clean
 clean: clean_siemens
