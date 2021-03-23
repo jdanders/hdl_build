@@ -57,7 +57,7 @@ $(SIM_LIB_DIR):
 #   before written in always_comb or always @* block".
 # Disable warnings about "Too few port connections" and "Some checking for
 #   conflicts with always_comb and always_latch variables not yet supported."
-VLOG_PARAMS := $(VLOG_OPTIONS) $(MS_INI_PARAM) +initreg+0 +initmem+0 -error 2182 +nowarnSVCHK $(VLOG_COVER_OPT) $(MSIM_VOPT)
+VLOG_PARAMS := $(VLOG_OPTIONS) $(VLOG_INCLUDES) $(MS_INI_PARAM) +initreg+0 +initmem+0 -error 2182 +nowarnSVCHK $(VLOG_COVER_OPT) $(MSIM_VOPT)
 
 WLF_PARAM := -wlf $(BLD_DIR)/vsim.wlf
 # set VSIM_COVER_OPT=-coverage to run a coverage test (or use smake)
@@ -186,7 +186,7 @@ elab_sim: $(PARAMETER_DONE) $(PRESIM_GOAL) $(presim_hook)
 	@echo -e "$(elab_str)" > $(BATCH_SCRIPT)
 	@chmod +x $(BATCH_SCRIPT)
 	@echo -e "$O Starting batch simulation $C (see $(BLOG_DIR)/batch.log)"
-	@$(BUILD_SCRIPTS)/run_full_log_on_err.sh "./$(BATCH_SCRIPT)" \
+	@$(HDL_BUILD_PATH)/siemens/run_siemens.sh "./$(BATCH_SCRIPT)" \
 	 "./$(BATCH_SCRIPT)" "$(BLOG_DIR)/batch.log"
 
 
@@ -196,7 +196,7 @@ batch: $(PARAMETER_DONE) $(PRESIM_GOAL) $(presim_hook)
 	@echo -e "$(batch_str)" > $(BATCH_SCRIPT)
 	@chmod +x $(BATCH_SCRIPT)
 	@echo -e "$O Starting batch simulation $C (see $(BLOG_DIR)/batch.log)"
-	@if $(BUILD_SCRIPTS)/run_full_log_on_err.sh "./$(BATCH_SCRIPT)" \
+	@if $(HDL_BUILD_PATH)/siemens/run_siemens.sh "./$(BATCH_SCRIPT)" \
 	    "./$(BATCH_SCRIPT)" "$(BLOG_DIR)/batch.log" ; then \
 	     echo -e "$(GREEN)# Simulation successful $C"; \
 	 fi;

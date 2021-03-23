@@ -70,8 +70,6 @@ SUPRESS_PARAMS := +nowarnTFMPC
 
 MSIM_VOPT := $(SUPRESS_PARAMS) $(strip +acc $(VOPT_OPTIONS))
 
-DEFAULT_SIM_LIB :=
-
 MS_INI := $(BLD_DIR)/modelsim.ini
 MS_INI_PARAM := -modelsimini $(MS_INI)
 
@@ -116,7 +114,7 @@ modules_sim: $(DEP_DIR)/$(TOP_TB).modelsim.d
 # The source file dependency is added in the .d file
 # The "$*" is replaced with the stem, which is the module name
 # The "$(word 2,$^)" is the second dependency, which will be the sv filename
-VLOG_CMD = vlog -sv -work $(SIM_LIB_DIR)/$* $(VLOG_PARAMS) $(DEFAULT_SIM_LIB) $(SIM_LIB_LIST) $(word 2,$^)
+VLOG_CMD = vlog -sv -work $(SIM_LIB_DIR)/$* $(VLOG_PARAMS) $(SIM_LIB_LIST) $(word 2,$^)
 VLOG_MSG = $(CLEAR)Compiling $*$(UPDATE)
 SVH_MSG = $(CLEAR)Including directory for $*$(UPDATE)
 SVH_CMD = echo "$(COMP_MSG)"
