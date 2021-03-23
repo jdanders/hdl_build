@@ -1,5 +1,5 @@
 #!/bin/bash
-# parameters: "ac verify report" "ac total"
+# parameters: "ac verify report"
 ac_report=${1}
 ac_total="$(grep "AC Total" ${ac_report} | tr -s ' ' | cut -d ' ' -f 4)"
 
