@@ -8,11 +8,11 @@ logfile=${3}
 
 # ignore vlog-2286 implicit include for uvm headers
 success_cmd=$(cat <<EOF
-       if grep -E --color "(\*\* Fatal[ :]|\*\* Error[ :]|UVM_ERROR [^:]|UVM_FATAL [^:])" ${logfile}; then
+       if grep -E --color "(\*?[*#] Fatal[ :]|\*?[*#] Error[ :]|UVM_ERROR [^:]|UVM_FATAL [^:])" ${logfile}; then
            echo -e "${RED}# Error detected $C (see ${logfile})"
            false
        else if GREP_COLOR="0;40;1;33" grep -P --color \
-             "(Warning[ :]|\*\* (Note: \((?!vlog-2286\))|Warnining: \())" ${logfile}; then
+             "(Warning[ :]|\*?[*#] (Note: \((?!vlog-2286\))|Warnining: \())" ${logfile}; then
            echo -e "$O No errors but please check warnings in ${logfile} $C"
            echo
        else
@@ -21,10 +21,10 @@ success_cmd=$(cat <<EOF
 EOF
 )
 fail_cmd=$(cat <<EOF
-       GREP_COLOR="0;40;1;33" grep --no-group-separator -A1 -E --color "\*\* Warning[ :]" \
+       GREP_COLOR="0;40;1;33" grep --no-group-separator -A1 -E --color "\*?[*#] Warning[ :]" \
            ${logfile}
        grep --no-group-separator -A1 -E --color \
-           "(\*\* Fatal[ :]|\*\* Error[ :]|UVM_ERROR[ :]|UVM_FATAL[ :])" \
+           "(\*?[*#] Fatal[ :]|\*?[*#] Error[ :]|UVM_ERROR[ :]|UVM_FATAL[ :])" \
            ${logfile}
 EOF
 )
