@@ -107,8 +107,7 @@ def find_deps(path, name, text, args):
     includes = []
     packages = []
     instances = []
-    # Remove characters in quotes or comments
-    text = quote_re.sub('', text)
+    # Remove characters or comments
     text = comment_line_re.sub('', text)
     text = comment_block_re.sub('', text)
     # Get includes
@@ -116,6 +115,8 @@ def find_deps(path, name, text, args):
     if include_search:
         for include_path in include_search:
             includes.append(os.path.basename(include_path))
+    # Remove quoted characters (must be preserved for includes)
+    text = quote_re.sub('', text)
     # Get packages
     package_search = package_use_re.findall(text)
     if package_search:
