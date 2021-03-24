@@ -15,8 +15,8 @@ else:
     filelist_cmd = ("find {srcbase} | grep -i -e '.sv$' -e '.svh$' "
                     "-e '.v$' -e '.vh$' -e {ignorefile}")
 
-svh_hdr = """ifeq (,$(findstring +{dirpath}",$(VLOG_OPTIONS)))
-  VLOG_OPTIONS += "+incdir+{dirpath}"
+svh_hdr = """ifeq (,$(findstring +{dirpath}",$(VLOG_INCLUDES)))
+  VLOG_INCLUDES += "+incdir+{dirpath}"
 endif
 """
 

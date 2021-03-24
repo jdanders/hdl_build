@@ -88,10 +88,6 @@ MS_INI_PARAM := -modelsimini $(MS_INI)
 
 VOPT_PARAMS := $(SUPRESS_PARAMS) $(MS_INI_PARAM) $(strip +acc $(VOPT_OPTIONS))
 
-# This part should match built-in uvm compile to avoid Warning: (vopt-10017)
-# -L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
-DEFAULT_SIM_LIB := -L floatfixlib -L ieee -L ieee_env -L mc2_lib -L mgc_ams -L modelsim_lib -L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact -L mtiPA -L osvvm -L std -L std_developerskit -L sv_std -L synopsys -L verilog -L vh_ux01v_lib -L vhdlopt_lib -L vital2000
-
 # Create list of libraries to use for vlog and vsim
 # In order to build in parallel, each module is in a separate lib
 # Use _DEPS variable and replace ' ' with ' -L ', like: -L mod1 -L mod2
@@ -131,7 +127,7 @@ modules_sim: $(DEP_DIR)/$(TOP_TB).questa.d
 
 # TODO: On some simulations, vopt fails the first time. FIXME!
 # for example: cedarbreaks/tie_fpga/tie_system_sim/build_bad_ip_frag
-VOPT_CMD := "vopt -sv -work $(SIM_LIB_DIR)/$(TOP_TB) $(VOPT_PARAMS) $(DEFAULT_SIM_LIB) $(SIM_LIB_LIST) $(SIM_PARAM) $(SIM_LIB_DIR)/$(TOP_TB).$(TOP_TB) -o $(TOP_TB)_opt"
+VOPT_CMD := "vopt -sv -work $(SIM_LIB_DIR)/$(TOP_TB) $(VOPT_PARAMS) $(SIM_LIB_LIST) $(SIM_PARAM) $(SIM_LIB_DIR)/$(TOP_TB).$(TOP_TB) -o $(TOP_TB)_opt"
 VOPT_MSG := "$O Optimizing design $C (see $(BLOG_DIR)/vopt.log)"
 
 $(VOPT_DONE): $(DEP_DIR)/$(TOP_TB).questa.o $(PARAMETER_DONE) | $(DONE_DIR)
@@ -145,7 +141,7 @@ $(VOPT_DONE): $(DEP_DIR)/$(TOP_TB).questa.o $(PARAMETER_DONE) | $(DONE_DIR)
 # The source file dependency is added in the .d file
 # The "$*" is replaced with the stem, which is the module name
 # The "$(word 2,$^)" is the second dependency, which will be the sv filename
-VLOG_CMD = vlog -sv -work $(SIM_LIB_DIR)/$* $(VLOG_PARAMS) $(DEFAULT_SIM_LIB) $(SIM_LIB_LIST) $(word 2,$^)
+VLOG_CMD = vlog -sv -work $(SIM_LIB_DIR)/$* $(VLOG_PARAMS) $(SIM_LIB_LIST) $(word 2,$^)
 VLOG_MSG = $(CLEAR)Compiling $*$(UPDATE)
 SVH_MSG = $(CLEAR)Including directory for $*$(UPDATE)
 SVH_CMD = echo "$(COMP_MSG)"
