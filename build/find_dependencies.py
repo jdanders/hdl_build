@@ -107,6 +107,10 @@ def find_deps(path, name, text, args):
     includes = []
     packages = []
     instances = []
+    # Remove characters in quotes or comments
+    text = quote_re.sub('', text)
+    text = comment_line_re.sub('', text)
+    text = comment_block_re.sub('', text)
     # Get includes
     include_search = include_use_re.findall(text)
     if include_search:
@@ -118,10 +122,7 @@ def find_deps(path, name, text, args):
         for (pkg_name, fname) in package_search:
             packages.append(pkg_name)
     # Get instances -- clean up code for instance search first
-    clean_text = quote_re.sub('', text)
-    clean_text = comment_line_re.sub('', clean_text)
-    clean_text = comment_block_re.sub('', clean_text)
-    clean_text = add_space_re.sub(' #(', clean_text)
+    clean_text = add_space_re.sub(' #(', text)
     clean_text = de_parentheses(clean_text)
     instance_search = module_instance_re.findall(clean_text)
     if instance_search:
