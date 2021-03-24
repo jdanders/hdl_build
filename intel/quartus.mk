@@ -95,9 +95,9 @@ $(DEP_DIR)/%.quartus.d: $(SYNTH_SUB_DONE) $(predependency_hook) | $(DEP_DIR) $(B
 
 ##################### Include top level ##############################
 
-# targets: grep lines that have ':', remove cleans, sed drop last character
-# Extract all targets for synthesis:
-QUARTUS_TARGETS := $(shell grep -oe "^[a-z].*:" $(HDL_BUILD_PATH)/intel/quartus.mk | grep -v clean | grep -v nuke | sed 's/:.*//')
+# targets: grep lines that have ':', remove exceptions, sed drop last character
+# Extract all targets for synthesis that need dependency analysis:
+QUARTUS_TARGETS := $(shell grep -oe "^[a-z].*:" $(HDL_BUILD_PATH)/intel/quartus.mk | grep -v clean | grep -v nuke | grep -v archive_synth_results | sed 's/:.*//')
 
 # When the top .d file is included, make can't do anything until built.
 # Make sure it's included only when needed to avoid doing extra work
