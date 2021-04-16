@@ -23,7 +23,7 @@ STP_FILE := $(STP_DIR)/soc.stp
 
 QSF_EXTRA := set_global_assignment -name ENABLE_INIT_DONE_OUTPUT ON
 
-include /path/to/hdl_build/build.mk
+include $(HDL_BUILD_PATH)/build.mk
 
 # Example to build NIOS software before synthesis
 LOCAL_HEX := $(SYNTH_DIR)/nios_debug_instruction_memory.hex

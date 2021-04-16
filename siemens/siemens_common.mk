@@ -25,7 +25,9 @@ TRANSCRIPT := $(BLD_DIR)/transcript
 WORK := $(SIM_LIB_DIR)/work
 SIM_SCRIPT := $(BLD_DIR)/sim.do
 BATCH_SCRIPT := $(BLD_DIR)/batch.do
+## `bld/restart.do` can be used in the simulator to recompile source and restart the simulation using `restart -f`. The current session and waveform is backed up first. The first optional parameter is `log` which will log all signals and memories after restart. Following parameters will be executed after restart. For example: `do bld/restart.do log run 100 ns` will log things and then run for 100 ns. It can be helpful to tie the command to a keyboard shortcut.
 RESTART_SCRIPT := $(BLD_DIR)/restart.do
+## `bld/resim.do` can be used in the simulator to recompile source and restart the simulation using `quit -sim`. The current session and waveform is backed up first and the transcript is archived and cleared. The first optional parameter is `log` which will log all signals and memories after restart. Following parameters will be executed after restart. For example: `do bld/resim.do log run 100 ns` will log things and then run for 100 ns. It can be helpful to tie the command to a keyboard shortcut.
 RESIM_SCRIPT := $(BLD_DIR)/resim.do
 ifndef SIM_SEED
   SIM_SEED := 9149
@@ -204,14 +206,14 @@ batch: $(PARAMETER_DONE) $(PRESIM_GOAL) $(presim_hook)
 	 fi;
 
 .PHONY: autocheck_batch
-## Run autocheck in console only
+## (or `ac_batch`) Run autocheck in console only
 autocheck_batch: $(AC_DONE)
 	@$(HDL_BUILD_PATH)/siemens/ac_pretty.sh '$(AC_REPORT)';
 .PHONY: ac_batch
 ac_batch: autocheck_batch
 
 .PHONY: autocheck
-## Run autocheck GUI
+## (or `ac`) Run autocheck GUI
 autocheck: $(AC_DONE)
 	@-$(HDL_BUILD_PATH)/siemens/ac_pretty.sh '$(AC_REPORT)';
 	@echo -e "$O Starting autocheck GUI $C"

@@ -1,10 +1,10 @@
 #-*- makefile -*-
 SIM_TOOL := questa_10.7
 
-TOP_TB := adder_top
+TOP_SIM := adder_top
 UVM_TEST := sw_fpga_config_test
 
-# mocks
+# module substitutions
 SIM_SUBSTITUTIONS := mock_config_ipcores.yml
 
 # test parameters
@@ -20,14 +20,14 @@ GEN_DIR = $(BLD_DIR)/gen
 EXTRA_DIRS = $(GEN_DIR)
 SIM_LIB_APPEND := -L v3model
 
-include /path/to/hdl_build/build.mk
+include $(HDL_BUILD_PATH)/build.mk
 
 # Example of compiling an external sim library
 
 MODEL_TIMEOUT_OVERRIDE := +define+MainBlockErase_time=8000 +define+WordProgram_time=850
 v3ROOT := $(SRC_BASE_DIR)/ip_cores/flash/micro_stack_2g
 
-$(DONE_DIR)/flash_v3model: $(v3ROOT)/dut/code/28F512.v $(v3ROOT)/dut/stack_2G.v $(v3ROOT)/CFImemory1Gb_top.vmf $(v3ROOT)/memory_0.vmf $(v3ROOT)/memory_1.vmf |$(DONE_DIR) $(SIM_LIB_DIR)
+$(DONE_DIR)/flash_v3model: $(MS_INI) $(v3ROOT)/dut/code/28F512.v $(v3ROOT)/dut/stack_2G.v $(v3ROOT)/CFImemory1Gb_top.vmf $(v3ROOT)/memory_0.vmf $(v3ROOT)/memory_1.vmf |$(DONE_DIR) $(SIM_LIB_DIR)
 	echo "v3model = $(SIM_LIB_DIR)/v3model" > $(SIM_LIB_DIR)/v3model.map
 	vlib $(SIM_LIB_DIR)/v3model
 	vlog -work $(SIM_LIB_DIR)/v3model $(VLOG_PARAMS) $(MODEL_TIMEOUT_OVERRIDE) "+incdir+$(v3ROOT)" $(v3ROOT)/dut/code/28F512P30.v $(v3ROOT)/dut/stack_2G.v

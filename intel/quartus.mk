@@ -71,7 +71,7 @@ DATE := `date \"+%a %H:%M:%S\"`
 
 MAKEDEP_TOOL_QUARTUS := "quartus"
 
-## a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `example-subs.yml`
+## a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `example-subs.yml`. For example: `SYNTH_SUBSTITUTIONS = $(shell git_root_path mocks/s10_mocks.yml) eth_100g:$(shell git_root_path mocks/100g_core.ip simonly_check:`
 # SYNTH_SUBSTITUTIONS: set in upper Makefile
 ifdef SYNTH_SUBSTITUTIONS
   SUBS_QUARTUS := --subsfilelist '$(SYNTH_SUBSTITUTIONS)'

@@ -21,15 +21,10 @@ AC_OUT_DIR := $(BLD_DIR)/ac_output
 AC_REPORT := $(AC_OUT_DIR)/autocheck_verify.rpt
 AC_DONE := $(DONE_DIR)/ac.done
 
-ifndef AC_DIRECTIVES
-## Need to create ac_directives.tcl or point to another file in Makefile
-  AC_DIRECTIVES := ac_directives.tcl
-endif
-
 ##################### Module dependency targets ##############################
 
 MAKEDEP_TOOL_QUESTA := "questa"
-## a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `example-subs.yml`
+## a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `example-subs.yml`. For example: `SIM_SUBSTITUTIONS = $(shell git_root_path sim_models/sim_all_ipcores.yml) eth_1g:$(shell git_root_path sim_models/1g_sim_model.sv ignorememodule:`
 # SIM_SUBSTITUTIONS: set in upper Makefile
 ifdef SIM_SUBSTITUTIONS
   SUBS_QUESTA := --subsfilelist '$(SIM_SUBSTITUTIONS)'
@@ -173,6 +168,11 @@ $(DEP_DIR)/%.questa.o: $(SIM_LIB_DONE) | $(DEP_DIR) $(BLOG_DIR)
 	    $(HDL_BUILD_PATH)/siemens/run_siemens.sh '$(VLOG_MSG)' '$(VLOG_CMD)' '$(BLOG_DIR)/vlog_$*.log'; \
 	else echo "Unknown filetype: $(word 2,$^)"; echo "$^"; exit 1; fi; fi;
 	@touch $@
+
+ifndef AC_DIRECTIVES
+## Autocheck directives filename, default is ac_directives.tcl
+  AC_DIRECTIVES := ac_directives.tcl
+endif
 
 AC_CMD := qverify -c -do $(AC_SCRIPT) -od $(AC_OUT_DIR) -modelsimini $(MS_INI)
 AC_MSG := $O Starting autocheck simulation $C (see $(BLOG_DIR)/autocheck.log)

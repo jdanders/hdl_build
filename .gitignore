@@ -5,5 +5,4 @@ __pycache__/
 bld*/
 
 *_custom.mk
-/default_sim.mk
-/default_synth.mk
+/defaults.mk

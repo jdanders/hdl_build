@@ -1,4 +1,0 @@
-DEFAULT_SIM_TOOL := questa_10.7
-ifndef SIM_TOOL
-  SIM_TOOL := $(DEFAULT_SIM_TOOL)
-endif

@@ -89,10 +89,9 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
 ##################### include other build modules ##############################
 
-## select which simulation tool should be used: questa or modelsim
-# SIM_TOOL: set in upper Makefile
--include $(HDL_BUILD_PATH)/default_sim.mk
--include $(HDL_BUILD_PATH)/default_synth.mk
+## select which simulation tool should be used: modelsim, questa or qverify
+# SIM_TOOL: set in defaults.mk, upper Makefile, or environment
+-include $(HDL_BUILD_PATH)/defaults.mk
 
 ifdef SIM_TOOL
  ifeq (modelsim,$(findstring modelsim,$(SIM_TOOL)))
@@ -105,7 +104,7 @@ ifdef SIM_TOOL
 endif
 
 ## select which synthesis tool should be used: quartuspro, quartus or vivado
-# SYNTH_TOOL: set in upper Makefile
+# SYNTH_TOOL: set in defaults.mk
 ifdef SYNTH_TOOL
  ifeq (quartus,$(findstring quartus,$(SYNTH_TOOL)))
   include $(HDL_BUILD_PATH)/intel/quartus.mk
@@ -168,7 +167,7 @@ list_targets:
 	@$(MAKE) MAKEFLAGS=-r -nqp .DEFAULT | awk -F':' '/^[a-zA-Z0-9][^$$#\/\t=]*:([^=]|$$)/ {split($$1,A,/ /);for(i in A)print A[i]}' | sort -u
 
 .PHONY: print-%
-## target to use `make print-VARIABLE_NAME` to examine `VARIABLE_NAME`'s value
+## target to use `make print-VARIABLE_NAME` to examine `VARIABLE_NAME`'s value. For example: `make print-BLD_DIR`
 print-%:
 	@echo '$* = $($*)'
 
@@ -189,7 +188,7 @@ helpall:
 	@$(HELP_GREP) | sed -e '$!N;s/## \(.*\)\n[# ]*\([^ ]*\) *:.*/\2:\n  \1/'
 
 helpmarkdown:
-	@$(HELP_GREP) | sed -e '$!N;s/## \(.*\)\n[# ]*\([^ ]*\) *:.*/* **`\2`**: \1/'
+	@$(HELP_GREP) | sed -e '$!N;s/## \(.*\)\n[# ]*\([^ ]*\) *:.*/* **`\2`**: \1/' | sed 's/ For example: /\n    * /g'
 
 # Bash auto-complete uses this target, specify to make sure nothing happens
 .DEFAULT:

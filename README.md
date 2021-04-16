@@ -13,12 +13,14 @@ Run `make help` for a list of targets, and `make helpall` for descriptions.
 To get started
 
 * clone or copy the hdl_build repository
-* to choose a global default tool, create `default_sim.mk` or `default_synth.mk`, or locally set `SIM_TOOL` and/or `SYNTH_TOOL` in your makefile
-    * See `example-default_sim.mk` and `example-default_synth.mk` for templates
+* to choose global default tools, create `defaults.mk`, or locally set `SIM_TOOL` and/or `SYNTH_TOOL` in your makefile
+    * See `example-defaults.mk` for a template
 * copy the `example.mk` file to your project build directory and rename it to `Makefile`
     * `example.mk` has the minimum for both sim and synth targets, with a QSF_EXTRA setting that will allow synthesis without worrying about pin assignments.
     * See `example-full-sim.mk` and `example-full-synth.mk` for examples of more options
-* edit `Makefile` to have the correct simulation top module name as `TOP_SIM` and/or correct synthesis top module name as `TOP_SYNTH`
+* edit `Makefile`
+    * add the correct simulation top module name as `TOP_SIM` and/or correct synthesis top module name as `TOP_SYNTH`
+    * set correct path to the hdl_build repository. For flexibility, the examples use an environment variable `$HDL_BUILD_PATH` to help committed build files work in multiple environments, but a fixed path would work too.
 * run `make sim` or `make synth`
     * synthesis projects require setting `FAMILY` and `DEVICE`
 
@@ -28,7 +30,7 @@ See the full makefile examples for adding other features to your project Makefil
 
 This build system depends on Intel Quartus and Siemens Questa or Modelsim for synthesis and simulation. Other tools could be added.
 
-The `vsim` command needs to be in the path for simulation, and the default `modelsim.ini` file will be copied from the detected install path.
+The tool commands (`vsim`, `quartus`, etc.) need to be in the path already.
 
 Quartus synthesis requires two variables in the use Makefile to create a project:
 
@@ -48,20 +50,26 @@ To add new makefiles that are not upstreamed, create `*_addon.mk` or `*_custom.m
 
 # Verilog Coding Requirements and Naming Conventions
 
-Module, package, and include dependencies are automatically determined.
+Module, package, and include dependencies are automatically determined for verilog sources.
 
-* Modules can only be implemented in files with any of the following extensions: `.v`, `.sv`, `.ip`, `.qsys`, `_qmw.v` (megawizard)
-* The module name must be the same as the "base" of the filename. For example, module `bypass_fifo` could be implemented as `bypass_fifo.sv` or `bypass_fifo.qsys`.
+* Modules can only be implemented in files with `.v` or `.sv` extensions. Non-HDL modules like vendor IP are not discovered automatically and must be specified as a `subtitution`.
+* The module name must be the same as the "base" of the filename. For example, module `fifo` could be implemented as `fifo.sv`.
     * Megafunction IP cores should be saved using the `_qmw.v` suffix. This is the only exception where the filename can be different than the module name. For example, a PLL called `clkgen` should be stored as `clkgen_qmw.v` (this is the file that has the megawizard settings embedded as comments). The module name in the code should still be `clkgen` without the `_qmw` extension. The build system will automatically handle building the megafunction for synthesis.
 * Only a single module definition is allowed per file.
-* Header files included by preprocessor ``` `include``` must end in `.svh` or `.vh` extension.
-* In cases where a module needs to be replaced with a sim-only or synth-only module, use `SIM_SUBSTITUTIONS` or `SYNTH_SUBSTITUTIONS`. Modules used as substitutions do not need follow any naming conventions because they will be found by direct path rather than the built-in search capability.
+* Header files included by preprocessor ``` `include``` must use `.svh` or `.vh` extension.
+* In cases where a module needs to be replaced with a sim-only or synth-only module, use `SIM_SUBSTITUTIONS` or `SYNTH_SUBSTITUTIONS`. Modules used as substitutions do not need follow any naming conventions because they will be found by direct path rather than the built-in search capability, but the module name used in the substitution must match the module being substituted.
 
 # Usage
 
-## Including build system
+## Including the build system
 
 The build system can be included in a local Makefile with the following include line in the makefile:
+
+```make
+include $(HDL_BUILD_PATH)/build.mk
+```
+
+or
 
 ```make
 include /path/to/hdl_build/build.mk
@@ -72,26 +80,28 @@ include /path/to/hdl_build/build.mk
     * hooks are rules defined under `build.mk` need to be tied into after the include.
 * The tool chain needs an entry point defined, such as `TOP_SIM` for simulation and `TOP_SYNTH` for synthesis.
 
-## Build structure
+## Build parameters and targets
 
 ### build.mk
 
 The **`build.mk`** file provides the entry point and the basic structure for the build system. Use `make help` for an up-to-date list of targets provided.
 
 * **`SLOW`**: Set SLOW=1 for a call to make to disable parallel building
-* **`GIT_REPO`**: defined if in git repository (test if git repo with make's `ifdef`)
+* **`GIT_REPO`**: this variable is only defined if the Makefile is in a git repository (test if git repo with make's `ifdef`)
 * **`SRC_BASE_DIR`**: directory that holds all relevant source code. Will be determined automatically if in a git repository.
 * **`IGNORE_FILE`**: `touch .ignore_build_system` in a directory that should be ignored by the build system
 * **`BLD_DIR`**: directory where build results are stored
 * **`$(predependency_hook)`**: target hook to run something before dependency analysis
+* **`SIM_TOOL`**: select which simulation tool should be used: modelsim, questa or qverify
+* **`SYNTH_TOOL`**: select which synthesis tool should be used: quartuspro, quartus or vivado
 * **`IGNORE_DIRS`**: a list of space delineated directory names to ignore during dependency search
-* **`EXTRA_DIRS`**: a list of space delineated directory names to add during dependency search. This is only useful for directories normally ignored by the build system or a directory outside the SRC_BASE_DIR directory.
+* **`EXTRA_DIRS`**: a list of space delineated directory names to add during dependency search. This is only useful for directories normally ignored by the build system or a directory outside the `SRC_BASE_DIR` directory.
 * **`clean`**: target to force redo of build steps and remove previous logs
 * **`cleanall`**: target to remove all build results
 * **`nuke`**: target to alias for cleanall
 * **`list_targets`**: target to list all available Makefile targets
-* **`print-%`**: target to use 'make print-VARIABLE_NAME' to examine VARIABLE_NAME's values
-    * `make print-BLD_DIR` for example
+* **`print-%`**: target to use `make print-VARIABLE_NAME` to examine `VARIABLE_NAME`'s value.
+    * `make print-BLD_DIR`
 * **`print-Makefiles`**: target to print a list of all included makefiles
 * **`help`**: target to show brief help.
 * **`helpall`**: target to show this help.
@@ -102,8 +112,7 @@ The **`build.mk`** file provides the entry point and the basic structure for the
 The **`modelsim.mk`** or **`questa.mk`** file provides simulator related targets and consumes the dependency analysis results of **`build.mk`**.
 
 * **`TOP_SIM`**: identify the top module to be simulated with `TOP_SIM`. If not set, `TOP` will be used.
-* **`AC_DIRECTIVES`**: Need to create ac_directives.tcl or point to another file in Makefile
-* **`SIM_SUBSTITUTIONS`**: a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `example-subs.yml`
+* **`SIM_SUBSTITUTIONS`**: a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `example-subs.yml`.
     * `SIM_SUBSTITUTIONS = $(shell git_root_path sim_models/sim_all_ipcores.yml) eth_1g:$(shell git_root_path sim_models/1g_sim_model.sv ignorememodule:`
 * **`SIM_LIB_APPEND`**: library string to appned to the library list, like `-L $(SIM_LIB_DIR)/customlib`
 * **`deps`**: target to figure out sim dependencies only
@@ -111,10 +120,15 @@ The **`modelsim.mk`** or **`questa.mk`** file provides simulator related targets
 * **`vopt`**: target to perform vopt after compile
 * **`filelist_sim`**: target to print list of files used in sim
 * **`modules_sim`**: target to print list of modules used in sim
+* **`AC_DIRECTIVES`**: Autocheck directives filename, default is ac_directives.tcl
 * **`printquesta-%`**: use 'make printquesta-VAR_NAME' to print variable after questa processing
 * **`$(presimlib_hook)`**: target hook to run before sim libraries
 * **`$(precomp_hook)`**: target hook to run before compilation
 * **`$(presim_hook)`**: target hook to run before starting sim
+* **`RESTART_SCRIPT`**: `bld/restart.do` can be used in the simulator to recompile source and restart the simulation using `restart -f`. The current session and waveform is backed up first. The first optional parameter is `log` which will log all signals and memories after restart. Following parameters will be executed after restart.
+    * `do bld/restart.do log run 100 ns` will log things and then run for 100 ns. It can be helpful to tie the command to a keyboard shortcut.
+* **`RESIM_SCRIPT`**: `bld/resim.do` can be used in the simulator to recompile source and restart the simulation using `quit -sim`. The current session and waveform is backed up first and the transcript is archived and cleared. The first optional parameter is `log` which will log all signals and memories after restart. Following parameters will be executed after restart.
+    * `do bld/resim.do log run 100 ns` will log things and then run for 100 ns. It can be helpful to tie the command to a keyboard shortcut.
 * **`VLOG_OPTIONS`**: options for `vlog` command
 * **`VLOG_COVER_OPT`**: options for `vlog` coverage
 * **`VOPT_OPTIONS`**: options for `vopt` command
@@ -125,10 +139,8 @@ The **`modelsim.mk`** or **`questa.mk`** file provides simulator related targets
 * **`sim`**: target to run simulation in GUI
 * **`elab_sim`**: target to run elaboration batch
 * **`batch`**: target to run simulation batch
-* **`autocheck_batch`**: Run autocheck in console only
-* **`ac_batch`**: Run autocheck in console only
-* **`autocheck`**: Run autocheck GUI
-* **`ac`**: Run autocheck GUI
+* **`autocheck_batch`**: (or `ac_batch`) Run autocheck in console only
+* **`autocheck`**: (or `ac`) Run autocheck GUI
 
 
 ### quartus.mk
@@ -143,7 +155,7 @@ The **`quartus.mk`** file provides Quartus related targets and consumes the depe
 * **`$(post_qgen_ip_hook)`**: target hook to run after ip generaation is done, before mapping
 * **`printquartus-%`**: use 'make printquartus-VAR_NAME' to print variable after Quartus processing
 * **`SYNTH_OVERRIDE`**: synthesis enforces `SYNTH_TOOL` version match against tool on `PATH`. Run make with `SYNTH_OVERRIDE=1` to ignore the check.
-* **`SYNTH_SUBSTITUTIONS`**: a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `example-subs.yml`
+* **`SYNTH_SUBSTITUTIONS`**: a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `example-subs.yml`.
     * `SYNTH_SUBSTITUTIONS = $(shell git_root_path mocks/s10_mocks.yml) eth_100g:$(shell git_root_path mocks/100g_core.ip simonly_check:`
 * **`QUARTUS_FILE`**: file path to a tcl file for Quartus settings that will be included in the QSF
 * **`XCVR_SETTINGS`**: file path to a tcl file for transciever settings that will be included in the QSF
@@ -181,6 +193,7 @@ The **`quartus.mk`** file provides Quartus related targets and consumes the depe
 * **`timing_check_all`**: target to report timing problems
 * **`timing_check_all_timing`**: target to report timing problems after repeating fit until timing is met
 
+
 # Outside of git
 
 If you want to use this outside of a git repository, you will need to set the source path in your Makefile like this:
@@ -189,7 +202,7 @@ If you want to use this outside of a git repository, you will need to set the so
 SRC_BASE_DIR := /path/to/current/src_base_dir
 TOP_SIM = test_mod
 
-include $(BUILD_PATH)/build.mk
+include $(HDL_BUILD_PATH)/build.mk
 ```
 
 If you are in a git repository, the `SRC_BASE_DIR` defaults to the root of the repository.

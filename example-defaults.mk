@@ -1,0 +1,9 @@
+DEFAULT_SIM_TOOL := questa_2021.1
+ifndef SIM_TOOL
+  SIM_TOOL := $(DEFAULT_SIM_TOOL)
+endif
+
+DEFAULT_SYNTH_TOOL := quartuspro_21.1
+ifndef SYNTH_TOOL
+  SYNTH_TOOL := $(DEFAULT_SYNTH_TOOL)
+endif
