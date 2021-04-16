@@ -89,7 +89,7 @@ def check_bad_timing(project):
             # No slack means good timing, return False
             return False
     else:
-            # Hasn't been run yet, return True (no timing is bad timing)
+        # Hasn't been run yet, return True (no timing is bad timing)
         return True
 
 

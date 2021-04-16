@@ -488,15 +488,24 @@ asm: $(DONE_DIR)/asm.done
 $(DONE_DIR)/asm.done: $(DONE_DIR)/fit.done
 	$(do-asm)
 
+define do-timing =
+@$(BUILD_SCRIPTS)/run_print_err_only.sh \
+   "$O Analyzing timing (started $(DATE)) $C (see $(BLOG_DIR)/build_sta.log)" \
+   "$(QSTA) $(STA_ARGS) $(PROJECT)" \
+   $(BLOG_DIR)/build_sta.log
+@touch $@
+endef
+
 .PHONY: timing
 ## target to run through Quartus timing (no assembler)
 timing: $(DONE_DIR)/timing.done
 $(DONE_DIR)/timing.done: $(DONE_DIR)/fit.done $(TIMEQUEST_RPT_GEN)
-	@$(BUILD_SCRIPTS)/run_print_err_only.sh \
-	   "$O Analyzing timing (started $(DATE)) $C (see $(BLOG_DIR)/build_sta.log)" \
-	   "$(QSTA) $(STA_ARGS) $(PROJECT)" \
-	   $(BLOG_DIR)/build_sta.log
-	@touch $@
+	$(do-timing)
+
+# This prevents timing and assembler from running in parallel for synth target
+$(DONE_DIR)/timing_seq.done: $(DONE_DIR)/asm.done
+	$(do-timing)
+	@touch $(DONE_DIR)/timing.done
 
 
 # Parse and store timing report information
@@ -509,7 +518,7 @@ $(TIMING_RPT_FILE): $(DONE_DIR)/timing.done | $(SYNTH_DIR)
 
 .PHONY: gen_timing_rpt_timing
 gen_timing_rpt_timing: $(DONE_DIR)/timing_timing.done
-$(DONE_DIR)/timing_timing.done: $(DONE_DIR)/fit_timing.done | $(DONE_DIR) $(SYNTH_DIR)
+$(DONE_DIR)/timing_timing.done: $(DONE_DIR)/asm_timing.done | $(DONE_DIR) $(SYNTH_DIR)
 	@$(TIMING_RPT_CMD)
 	@touch $@
 
@@ -525,7 +534,7 @@ run_timing_rpt: | $(SYNTH_DIR)
 fit_timing: $(DONE_DIR)/fit_timing.done
 $(DONE_DIR)/fit_timing.done: $(DONE_DIR)/merge.done
 	@echo -e "$O Timing Fit, $(NUM_TIMING_TRIES) tries (started $(DATE)) $C"
-	@$(HDL_BUILD_PATH)/intel/timing_rerun.py $(SYNTH_DIR) $(PROJECT) $(DONE_DIR)/map.done -n $(NUM_TIMING_TRIES)
+	@$(HDL_BUILD_PATH)/intel/timing_rerun.py $(SYNTH_DIR) $(PROJECT) $(DONE_DIR)/map.done -n $(NUM_TIMING_TRIES) || (grep --color -i "Error (|Critical Warning (" $(PROJECT).fit.rpt && false)
 	@touch $(DONE_DIR)/fit.done
 	@touch $(DONE_DIR)/timing.done
 	@touch $@
@@ -541,13 +550,13 @@ $(DONE_DIR)/asm_timing.done: $(DONE_DIR)/fit_timing.done
 .PHONY: synth
 ## target to run full synthesis: map fit asm timing
 synth: $(DONE_DIR)/synth
-$(DONE_DIR)/synth: $(DONE_DIR)/map.done $(DONE_DIR)/fit.done $(DONE_DIR)/asm.done $(DONE_DIR)/timing.done $(TIMING_RPT_FILE)
+$(DONE_DIR)/synth: $(DONE_DIR)/timing_seq.done
 	@touch $@
 
 .PHONY: synth_timing
 ## target to run full synthesis, running fit until timing is made
 synth_timing: $(DONE_DIR)/synth_timing
-$(DONE_DIR)/synth_timing: $(DONE_DIR)/map.done $(DONE_DIR)/fit_timing.done $(DONE_DIR)/asm_timing.done $(DONE_DIR)/timing_timing.done
+$(DONE_DIR)/synth_timing: $(DONE_DIR)/timing_timing.done
 	@touch $@
 
 
