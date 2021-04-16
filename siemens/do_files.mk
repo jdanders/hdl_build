@@ -6,7 +6,7 @@ endef
 
 
 define sim_do
-vsim -i $(VSIM_PARAMS) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(SIM_LIB_DIR)/$(_TOP).$(TOP_COMP)
+vsim -i $(VSIM_PARAMS) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(SIM_LIB_DIR)/$(SIEMENS_TOP).$(TOP_COMP)
 
 endef
 
@@ -90,14 +90,14 @@ endef
 define batch
 #!/bin/bash
 
-vsim $(VSIM_PARAMS) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(BATCH_OPTIONS) $(SIM_LIB_DIR)/$(_TOP).$(TOP_COMP)
+vsim $(VSIM_PARAMS) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(BATCH_OPTIONS) $(SIM_LIB_DIR)/$(SIEMENS_TOP).$(TOP_COMP)
 
 endef
 
 define elab
 #!/bin/bash
 
-vsim $(VSIM_PARAMS) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(ELAB_OPTIONS) $(SIM_LIB_DIR)/$(_TOP).$(TOP_COMP)
+vsim $(VSIM_PARAMS) $(SIM_LIB_LIST) -sv_seed $(SIM_SEED) $(ELAB_OPTIONS) $(SIM_LIB_DIR)/$(SIEMENS_TOP).$(TOP_COMP)
 
 endef
 
@@ -105,7 +105,7 @@ endef
 define autocheck
 onerror {exit 1}
 do $(AC_DIRECTIVES)
-autocheck compile -d $(SIM_LIB_DIR)/$(_TOP).$(_TOP) $(SIM_LIB_LIST)
+autocheck compile -d $(SIM_LIB_DIR)/$(SIEMENS_TOP).$(SIEMENS_TOP) $(SIM_LIB_LIST)
 autocheck verify
 endef
 
