@@ -23,9 +23,10 @@ $(presim_hook): | $(DONE_DIR)
 
 TRANSCRIPT := $(BLD_DIR)/transcript
 WORK := $(SIM_LIB_DIR)/work
-RUN_SCRIPT := $(BLD_DIR)/run.do
+SIM_SCRIPT := $(BLD_DIR)/sim.do
 BATCH_SCRIPT := $(BLD_DIR)/batch.do
-REDO_SCRIPT := $(BLD_DIR)/redo.do
+RESTART_SCRIPT := $(BLD_DIR)/restart.do
+RESIM_SCRIPT := $(BLD_DIR)/resim.do
 ifndef SIM_SEED
   SIM_SEED := 9149
 endif
@@ -174,10 +175,11 @@ include $(HDL_BUILD_PATH)/siemens/do_files.mk
 # to run make commands cleanly in GUI, remove -j flags
 ## target to run simulation in GUI
 sim: $(PARAMETER_DONE) $(PRESIM_GOAL) $(presim_hook)
-	@echo -e "$(run_str)" > $(RUN_SCRIPT)
-	@echo -e '$(redo_str)' > $(REDO_SCRIPT)
+	@echo -e "$(sim_do_str)" > $(SIM_SCRIPT)
+	@echo -e '$(restart_str)' > $(RESTART_SCRIPT)
+	@echo -e '$(resim_str)' > $(RESIM_SCRIPT)
 	@echo -e "$O Starting simulation $C"
-	MAKEFLAGS="-r" vsim $(MS_INI_PARAM) -i -do $(RUN_SCRIPT)&
+	MAKEFLAGS="-r" vsim $(MS_INI_PARAM) -i -do $(SIM_SCRIPT)&
 
 
 .PHONY: elab_sim
@@ -221,7 +223,7 @@ ac: autocheck
 clean: clean_siemens
 .PHONY: clean_siemens
 clean_siemens:
-	@rm -rf $(RUN_SCRIPT) $(BATCH_SCRIPT) $(REDO_SCRIPT) $(SIM_LIB_DIR) $(WORK) certe_dump.xml
+	@rm -rf $(SIM_SCRIPT) $(BATCH_SCRIPT) $(RESTART_SCRIPT) $(RESIM_SCRIPT) $(SIM_LIB_DIR) $(WORK) certe_dump.xml
 	@if [[ "$(MAKECMDGOALS)" == *comp* ]]; then make --no-print-directory -r $(DEP_DIR)/$(_TOP).d; fi
 
 .PHONY: cleanall

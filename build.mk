@@ -57,6 +57,7 @@ ifndef BLD_DIR
 ## directory where build results are stored
   BLD_DIR := bld
 endif
+export BLD_DIR
 $(BLD_DIR):
 	@mkdir -p $(BLD_DIR)
 	@touch $(BLD_DIR)/$(IGNORE_FILE)
