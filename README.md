@@ -14,10 +14,10 @@ To get started
 
 * clone or copy the hdl_build repository
 * to choose global default tools, create `defaults.mk`, or locally set `SIM_TOOL` and/or `SYNTH_TOOL` in your makefile
-    * See `example-defaults.mk` for a template
-* copy the `example.mk` file to your project build directory and rename it to `Makefile`
+    * `defaults.mk` is placed in the root of the hdl_build repo. See `examples/example-defaults.mk` for a template
+* copy the `examples/example.mk` file to your project build directory and rename it to `Makefile`
     * `example.mk` has the minimum for both sim and synth targets, with a QSF_EXTRA setting that will allow synthesis without worrying about pin assignments.
-    * See `example-full-sim.mk` and `example-full-synth.mk` for examples of more options
+    * See `examples/example-full-sim.mk` and `examples/example-full-synth.mk` for examples of more options
 * edit `Makefile`
     * add the correct simulation top module name as `TOP_SIM` and/or correct synthesis top module name as `TOP_SYNTH`
     * set correct path to the hdl_build repository. For flexibility, the examples use an environment variable `$HDL_BUILD_PATH` to help committed build files work in multiple environments, but a fixed path would work too.
@@ -112,7 +112,7 @@ The **`build.mk`** file provides the entry point and the basic structure for the
 The **`modelsim.mk`** or **`questa.mk`** file provides simulator related targets and consumes the dependency analysis results of **`build.mk`**.
 
 * **`TOP_SIM`**: identify the top module to be simulated with `TOP_SIM`. If not set, `TOP` will be used.
-* **`SIM_SUBSTITUTIONS`**: a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `example-subs.yml`.
+* **`SIM_SUBSTITUTIONS`**: a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `examples/example-subs.yml`.
     * `SIM_SUBSTITUTIONS = $(shell git_root_path sim_models/sim_all_ipcores.yml) eth_1g:$(shell git_root_path sim_models/1g_sim_model.sv ignorememodule:`
 * **`SIM_LIB_APPEND`**: library string to appned to the library list, like `-L $(SIM_LIB_DIR)/customlib`
 * **`deps`**: target to figure out sim dependencies only
@@ -155,7 +155,7 @@ The **`quartus.mk`** file provides Quartus related targets and consumes the depe
 * **`$(post_qgen_ip_hook)`**: target hook to run after ip generaation is done, before mapping
 * **`printquartus-%`**: use 'make printquartus-VAR_NAME' to print variable after Quartus processing
 * **`SYNTH_OVERRIDE`**: synthesis enforces `SYNTH_TOOL` version match against tool on `PATH`. Run make with `SYNTH_OVERRIDE=1` to ignore the check.
-* **`SYNTH_SUBSTITUTIONS`**: a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `example-subs.yml`.
+* **`SYNTH_SUBSTITUTIONS`**: a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `examples/example-subs.yml`.
     * `SYNTH_SUBSTITUTIONS = $(shell git_root_path mocks/s10_mocks.yml) eth_100g:$(shell git_root_path mocks/100g_core.ip simonly_check:`
 * **`QUARTUS_FILE`**: file path to a tcl file for Quartus settings that will be included in the QSF
 * **`XCVR_SETTINGS`**: file path to a tcl file for transciever settings that will be included in the QSF

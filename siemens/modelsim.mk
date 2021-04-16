@@ -21,7 +21,7 @@ SIM_LIB_DIR := $(BLD_DIR)/simlib
 ##################### Module dependency targets ##############################
 
 MAKEDEP_TOOL_MODELSIM := "modelsim"
-## a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `example-subs.yml`. For example: `SIM_SUBSTITUTIONS = $(shell git_root_path sim_models/sim_all_ipcores.yml) eth_1g:$(shell git_root_path sim_models/1g_sim_model.sv ignorememodule:`
+## a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `examples/example-subs.yml`. For example: `SIM_SUBSTITUTIONS = $(shell git_root_path sim_models/sim_all_ipcores.yml) eth_1g:$(shell git_root_path sim_models/1g_sim_model.sv ignorememodule:`
 # SIM_SUBSTITUTIONS: set in upper Makefile
 ifdef SIM_SUBSTITUTIONS
   SUBS_MODELSIM := --subsfilelist '$(SIM_SUBSTITUTIONS)'
