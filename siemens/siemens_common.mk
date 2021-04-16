@@ -224,7 +224,7 @@ clean: clean_siemens
 .PHONY: clean_siemens
 clean_siemens:
 	@rm -rf $(SIM_SCRIPT) $(BATCH_SCRIPT) $(RESTART_SCRIPT) $(RESIM_SCRIPT) $(SIM_LIB_DIR) $(WORK) certe_dump.xml
-	@if [[ "$(MAKECMDGOALS)" == *comp* ]]; then make --no-print-directory -r $(DEP_DIR)/$(_TOP).d; fi
+	@if [[ "$(MAKECMDGOALS)" == *comp* ]]; then make --no-print-directory -r $(DEP_DIR)/$(SIEMENS_TOP).d; fi
 
 .PHONY: cleanall
 cleanall: cleanall_siemens

@@ -2,13 +2,13 @@
 ## -------------------- #
 #  Modelsim build rules #
 
-ifndef TOP_TB
-  ifdef TOP_SIM
-## identify the top module to be simulated with `TOP_TB`. If not set, `TOP` will be used.
-    TOP_TB := $(TOP_SIM)
+ifndef TOP_SIM
+  ifdef TOP_TB
+## identify the top module to be simulated with `TOP_SIM`. If not set, `TOP_TB` or `TOP` will be used.
+    TOP_SIM := $(TOP_TB)
   else
     ifdef TOP
-      TOP_TB := $(TOP)
+      TOP_SIM := $(TOP)
     endif
   endif
 endif
@@ -55,12 +55,12 @@ SIM_DEPS := $(filter $(MODELSIM_TARGETS),$(MAKECMDGOALS))
 ifneq (,$(SIM_DEPS))
   # The top .d file must be called out specifically to get the ball rolling
   # Otherwise nothing happens because there are no matches to the wildcard rule
-  ifndef TOP_TB
-    $(error No TOP_TB module defined)
+  ifndef TOP_SIM
+    $(error No TOP_SIM module defined)
   endif
-  ifdef	TOP_TB
-    -include $(DEP_DIR)/$(TOP_TB).modelsim.d
-    _TOP := $(TOP_TB)
+  ifdef	TOP_SIM
+    -include $(DEP_DIR)/$(TOP_SIM).modelsim.d
+    SIEMENS_TOP := $(TOP_SIM)
   endif
 endif
 
@@ -77,7 +77,7 @@ MS_INI_PARAM := -modelsimini $(MS_INI)
 # Create list of libraries to use for vlog and vsim
 # In order to build in parallel, each module is in a separate lib
 # Use _DEPS variable and replace ' ' with ' -L ', like: -L mod1 -L mod2
-SIM_TOP_DEPS := $(sort $(strip $($(_TOP)_DEPS)))
+SIM_TOP_DEPS := $(sort $(strip $($(SIEMENS_TOP)_DEPS)))
 SIM_LIB_LIST := $(shell echo " $(SIM_TOP_DEPS)" | sed -E 's| +(\w)| -L \1|g') -L work $(SIM_LIB_APPEND)
 
 ## library string to appned to the library list, like `-L $(SIM_LIB_DIR)/customlib`
@@ -96,17 +96,17 @@ PARAMETER_DONE := $(DONE_DIR)/parameters.done
 # Create rules to determine dependencies and create compile recipes for .sv
 .PHONY: deps
 ## target to figure out sim dependencies only
-deps: $(DEP_DIR)/$(_TOP).modelsim.d
+deps: $(DEP_DIR)/$(SIEMENS_TOP).modelsim.d
 .PHONY: comp
 ## target to compile simulation files
-comp: $(MS_INI) $(DEP_DIR)/$(TOP_TB).modelsim.o $(precomp_hook)
+comp: $(MS_INI) $(DEP_DIR)/$(TOP_SIM).modelsim.o $(precomp_hook)
 .PHONY: filelist_sim
 ## target to print list of files used in sim
-filelist_sim: $(DEP_DIR)/$(TOP_TB).modelsim.d
+filelist_sim: $(DEP_DIR)/$(TOP_SIM).modelsim.d
 	@grep "\.d:" $(DEP_DIR)/* | cut -d " " -f 2 | sort | uniq
 .PHONY: modules_sim
 ## target to print list of modules used in sim
-modules_sim: $(DEP_DIR)/$(TOP_TB).modelsim.d
+modules_sim: $(DEP_DIR)/$(TOP_SIM).modelsim.d
 	@echo $(SIM_TOP_DEPS)
 
 
@@ -130,7 +130,7 @@ $(DEP_DIR)/%.modelsim.o: $(SIM_LIB_DONE) | $(DEP_DIR) $(BLOG_DIR)
 
 
 PRESIM_GOAL := comp
-TOP_COMP := $(_TOP)
+TOP_COMP := $(SIEMENS_TOP)
 
 # To print variables that need full dependency includes
 # for example: make printmodelsim-SIM_LIB_LIST

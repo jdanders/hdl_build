@@ -2,13 +2,13 @@
 ## ----------------- #
 # Questa build rules #
 
-ifndef TOP_TB
-  ifdef TOP_SIM
-## identify the top module to be simulated with `TOP_TB`. If not set, `TOP` will be used.
-    TOP_TB := $(TOP_SIM)
+ifndef TOP_SIM
+  ifdef TOP_TB
+## identify the top module to be simulated with `TOP_SIM`. If not set, `TOP` will be used.
+    TOP_SIM := $(TOP_TB)
   else
     ifdef TOP
-      TOP_TB := $(TOP)
+      TOP_SIM := $(TOP)
     endif
   endif
 endif
@@ -64,12 +64,12 @@ SIM_DEPS := $(filter $(QUESTA_TARGETS),$(MAKECMDGOALS))
 ifneq (,$(SIM_DEPS))
   # The top .d file must be called out specifically to get the ball rolling
   # Otherwise nothing happens because there are no matches to the wildcard rule
-  ifndef TOP_TB
-    $(error No TOP_TB module defined)
+  ifndef TOP_SIM
+    $(error No TOP_SIM module defined)
   endif
-  ifdef TOP_TB
-    -include $(DEP_DIR)/$(TOP_TB).questa.d
-    _TOP := $(TOP_TB)
+  ifdef TOP_SIM
+    -include $(DEP_DIR)/$(TOP_SIM).questa.d
+    SIEMENS_TOP := $(TOP_SIM)
   endif
 endif
 
@@ -80,7 +80,7 @@ ifneq (,$(AC_DEPS))
   endif
   ifdef TOP_AC
     -include $(DEP_DIR)/$(TOP_AC).questa.d
-    _TOP := $(TOP_AC)
+    SIEMENS_TOP := $(TOP_AC)
   endif
 endif
 
@@ -111,7 +111,7 @@ VOPT_PARAMS := $(SUPRESS_PARAMS) $(MS_INI_PARAM) $(strip +acc $(VOPT_OPTIONS))
 # Create list of libraries to use for vlog and vsim
 # In order to build in parallel, each module is in a separate lib
 # Use _DEPS variable and replace ' ' with ' -L ', like: -L mod1 -L mod2
-SIM_TOP_DEPS := $(sort $(strip $($(_TOP)_DEPS)))
+SIM_TOP_DEPS := $(sort $(strip $($(SIEMENS_TOP)_DEPS)))
 SIM_LIB_LIST := $(shell echo " $(SIM_TOP_DEPS)" | sed -E 's| +(\w)| -L \1|g') -L work $(SIM_LIB_APPEND)
 
 ## library string to appned to the library list, like `-L $(SIM_LIB_DIR)/customlib`
@@ -129,28 +129,28 @@ PARAMETER_DONE := $(DONE_DIR)/parameters.done
 # Create rules to determine dependencies and create compile recipes for .sv
 .PHONY: deps
 ## target to figure out sim dependencies only
-deps: $(DEP_DIR)/$(_TOP).questa.d
+deps: $(DEP_DIR)/$(SIEMENS_TOP).questa.d
 .PHONY: comp
 ## target to compile simulation files
-comp: $(MS_INI) $(DEP_DIR)/$(_TOP).questa.o $(precomp_hook)
+comp: $(MS_INI) $(DEP_DIR)/$(SIEMENS_TOP).questa.o $(precomp_hook)
 .PHONY: vopt
 ## target to perform vopt after compile
 vopt: comp $(VOPT_DONE)
 .PHONY: filelist_sim
 ## target to print list of files used in sim
-filelist_sim: $(DEP_DIR)/$(_TOP).questa.d
+filelist_sim: $(DEP_DIR)/$(SIEMENS_TOP).questa.d
 	@grep "\.d:" $(DEP_DIR)/* | cut -d " " -f 2 | sort | uniq
 .PHONY: modules_sim
 ## target to print list of modules used in sim
-modules_sim: $(DEP_DIR)/$(_TOP).questa.d
+modules_sim: $(DEP_DIR)/$(SIEMENS_TOP).questa.d
 	@echo $(SIM_TOP_DEPS)
 
 # TODO: On some simulations, vopt fails the first time. FIXME!
 # for example: cedarbreaks/tie_fpga/tie_system_sim/build_bad_ip_frag
-VOPT_CMD := "vopt -sv -work $(SIM_LIB_DIR)/$(_TOP) $(VOPT_PARAMS) $(SIM_LIB_LIST) $(SIM_PARAM) $(SIM_LIB_DIR)/$(_TOP).$(_TOP) -o $(_TOP)_opt"
+VOPT_CMD := "vopt -sv -work $(SIM_LIB_DIR)/$(SIEMENS_TOP) $(VOPT_PARAMS) $(SIM_LIB_LIST) $(SIM_PARAM) $(SIM_LIB_DIR)/$(SIEMENS_TOP).$(SIEMENS_TOP) -o $(SIEMENS_TOP)_opt"
 VOPT_MSG := "$O Optimizing design $C (see $(BLOG_DIR)/vopt.log)"
 
-$(VOPT_DONE): $(DEP_DIR)/$(_TOP).questa.o $(PARAMETER_DONE) | $(DONE_DIR)
+$(VOPT_DONE): $(DEP_DIR)/$(SIEMENS_TOP).questa.o $(PARAMETER_DONE) | $(DONE_DIR)
 	@$(BUILD_SCRIPTS)/run_print_warn_and_err.sh $(VOPT_MSG) $(VOPT_CMD) $(BLOG_DIR)/vopt.log \
 	 || (echo -e "$O Only a problem if second vopt attempt fails... $C" && $(BUILD_SCRIPTS)/run_print_warn_and_err.sh  $(VOPT_MSG) $(VOPT_CMD) $(BLOG_DIR)/vopt.log)
 	@touch $(VOPT_DONE)
@@ -176,13 +176,13 @@ $(DEP_DIR)/%.questa.o: $(SIM_LIB_DONE) | $(DEP_DIR) $(BLOG_DIR)
 
 AC_CMD := qverify -c -do $(AC_SCRIPT) -od $(AC_OUT_DIR) -modelsimini $(MS_INI)
 AC_MSG := $O Starting autocheck simulation $C (see $(BLOG_DIR)/autocheck.log)
-$(AC_DONE): $(MS_INI) $(DEP_DIR)/$(_TOP).questa.o $(precomp_hook) $(AC_DIRECTIVES)
+$(AC_DONE): $(MS_INI) $(DEP_DIR)/$(SIEMENS_TOP).questa.o $(precomp_hook) $(AC_DIRECTIVES)
 	@printf "$(autocheck_str)" > $(AC_SCRIPT)
 	@$(HDL_BUILD_PATH)/siemens/run_siemens.sh '$(AC_MSG)' '$(AC_CMD)' '$(BLOG_DIR)/autocheck.log';
 	@touch $@
 
 PRESIM_GOAL := vopt
-TOP_COMP := $(_TOP)_opt
+TOP_COMP := $(SIEMENS_TOP)_opt
 
 # To print variables that need full dependency includes
 # for example: make printquesta-SIM_LIB_LIST
