@@ -1,4 +1,4 @@
 #!/bin/bash
 
-export PATH=${PATH}:fake_bin:fake_msim/bin
+export PATH=fake_bin:fake_msim/bin:${PATH}
 ./run_test.sh

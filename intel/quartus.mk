@@ -33,7 +33,7 @@ SYNTH_SUB_DONE := $(DONE_DIR)/synth_substitutions.done
 
 # To print variables that need full dependency includes
 .PHONY: printquartus-%
-## use 'make printquartus-VAR_NAME' to print variable after Quartus processing
+## use `make printquartus-VAR_NAME` to print variable after Quartus processing
 printquartus-%:
 	@echo '$* = $($*)'
 

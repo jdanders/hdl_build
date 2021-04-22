@@ -28,7 +28,7 @@ See the full makefile examples for adding other features to your project Makefil
 
 # Software Requirements
 
-This build system depends on Intel Quartus and Siemens Questa or Modelsim for synthesis and simulation. Other tools could be added.
+This build system depends on Intel Quartus, Siemens Questa or Modelsim, and Vivado xsim for synthesis and simulation. Other tools could be added.
 
 The tool commands (`vsim`, `quartus`, etc.) need to be in the path already.
 
@@ -92,7 +92,7 @@ The **`build.mk`** file provides the entry point and the basic structure for the
 * **`IGNORE_FILE`**: `touch .ignore_build_system` in a directory that should be ignored by the build system
 * **`BLD_DIR`**: directory where build results are stored
 * **`$(predependency_hook)`**: target hook to run something before dependency analysis
-* **`SIM_TOOL`**: select which simulation tool should be used: modelsim, questa or qverify
+* **`SIM_TOOL`**: select which simulation tool should be used: modelsim, questa or qverify, vivado
 * **`SYNTH_TOOL`**: select which synthesis tool should be used: quartuspro, quartus or vivado
 * **`IGNORE_DIRS`**: a list of space delineated directory names to ignore during dependency search
 * **`EXTRA_DIRS`**: a list of space delineated directory names to add during dependency search. This is only useful for directories normally ignored by the build system or a directory outside the `SRC_BASE_DIR` directory.
@@ -121,7 +121,7 @@ The **`modelsim.mk`** or **`questa.mk`** file provides simulator related targets
 * **`filelist_sim`**: target to print list of files used in sim
 * **`modules_sim`**: target to print list of modules used in sim
 * **`AC_DIRECTIVES`**: Autocheck directives filename, default is ac_directives.tcl
-* **`printquesta-%`**: use 'make printquesta-VAR_NAME' to print variable after questa processing
+* **`printquesta-%`**: use `make printquesta-VAR_NAME` to print variable after questa processing
 * **`$(presimlib_hook)`**: target hook to run before sim libraries
 * **`$(precomp_hook)`**: target hook to run before compilation
 * **`$(presim_hook)`**: target hook to run before starting sim
@@ -143,6 +143,30 @@ The **`modelsim.mk`** or **`questa.mk`** file provides simulator related targets
 * **`autocheck`**: (or `ac`) Run autocheck GUI
 
 
+### vivado xsim.mk
+
+The **`xsim.mk`** file provides Vivado simulator targets and consumes the dependency analysis results of **`build.mk`**.
+
+* **`TOP_SIM`**: identify the top module to be simulated with `TOP_TB`. If not set, `TOP` will be used.
+* **`printxsim-%`**: use `make printxsim-VAR_NAME` to print variable after xsim processing
+* **`$(prexsimlib_hook)`**: target hook to run before xsim libraries
+* **`$(prexcomp_hook)`**: target hook to run before compilation
+* **`$(prexsim_hook)`**: target hook to run before starting xsim
+* **`XVLOG_OPTIONS`**: options for `xvlog` command
+* **`XELAB_OPTIONS`**: options for the `xelab` command
+* **`XSIM_OPTIONS`**: options for `xsim` command
+* **`SIM_SUBSTITUTIONS`**: a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `example-subs.yml`
+* **`XSIM_LIB_APPEND`**: library string to appned to the library list, like `-L $(XSIM_LIB_DIR)/customlib`
+* **`deps`**: target to figure out xsim dependencies only
+* **`comp`**: target to compile simulation files
+* **`filelist_xsim`**: target to print list of files used in xsim
+* **`modules_xsim`**: target to print list of modules used in xsim
+* **`PARAM_*`**: monitors variables prefixed with **`PARAM_`** and passes them to xsimulator. `PARAM_NUM_PACKETS := 20` passes a parameter named NUM_PACKETS with value of 20.
+* **`elab_sim`**: target to run elaboration batch
+* **`sim`**: target to run simulation in GUI
+* **`batch`**: target to run simulation batch
+
+
 ### quartus.mk
 
 The **`quartus.mk`** file provides Quartus related targets and consumes the dependency analysis results of **`build.mk`**.
@@ -153,7 +177,7 @@ The **`quartus.mk`** file provides Quartus related targets and consumes the depe
 * **`NUM_TIMING_TRIES`**: tell synth_timing number of tries before giving up on timing
 * **`$(presynth_hook)`**: target hook to run before any synth work
 * **`$(post_qgen_ip_hook)`**: target hook to run after ip generaation is done, before mapping
-* **`printquartus-%`**: use 'make printquartus-VAR_NAME' to print variable after Quartus processing
+* **`printquartus-%`**: use `make printquartus-VAR_NAME` to print variable after Quartus processing
 * **`SYNTH_OVERRIDE`**: synthesis enforces `SYNTH_TOOL` version match against tool on `PATH`. Run make with `SYNTH_OVERRIDE=1` to ignore the check.
 * **`SYNTH_SUBSTITUTIONS`**: a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `examples/example-subs.yml`.
     * `SYNTH_SUBSTITUTIONS = $(shell git_root_path mocks/s10_mocks.yml) eth_100g:$(shell git_root_path mocks/100g_core.ip simonly_check:`

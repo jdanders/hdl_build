@@ -135,7 +135,7 @@ TOP_COMP := $(SIEMENS_TOP)
 # To print variables that need full dependency includes
 # for example: make printmodelsim-SIM_LIB_LIST
 .PHONY: printmodelsim-%
-## use 'make printmodelsim-VAR_NAME' to print variable after modelsim processing
+## use `make printmodelsim-VAR_NAME` to print variable after modelsim processing
 printmodelsim-%:
 	@echo '$* = $($*)'
 

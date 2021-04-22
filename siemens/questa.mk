@@ -187,7 +187,7 @@ TOP_COMP := $(SIEMENS_TOP)_opt
 # To print variables that need full dependency includes
 # for example: make printquesta-SIM_LIB_LIST
 .PHONY: printquesta-%
-## use 'make printquesta-VAR_NAME' to print variable after questa processing
+## use `make printquesta-VAR_NAME` to print variable after questa processing
 printquesta-%:
 	@echo '$* = $($*)'
 

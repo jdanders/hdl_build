@@ -63,7 +63,7 @@ $(SIM_LIB_DIR):
 VLOG_PARAMS := $(VLOG_OPTIONS) $(VLOG_INCLUDES) $(MS_INI_PARAM) +initreg+0 +initmem+0 -error 2182 +nowarnSVCHK $(VLOG_COVER_OPT) $(MSIM_VOPT)
 
 WLF_PARAM := -wlf $(BLD_DIR)/vsim.wlf
-# set VSIM_COVER_OPT=-coverage to run a coverage test (or use smake)
+# set VSIM_COVER_OPT=-coverage to run a coverage test
 VSIM_PARAMS := -msgmode both -t 1ps -permit_unmatched_virtual_intf $(MSIM_VSIM) $(SUPRESS_PARAMS) $(WLF_PARAM) $(MS_INI_PARAM) $(VSIM_COVER_OPT) $(VSIM_OPTIONS) $(VSIM_LDFLAGS)
 
 SIM_LAST_DEPS := $(SIM_LIB_DIR)/sim_top_deps

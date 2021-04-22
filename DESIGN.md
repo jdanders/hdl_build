@@ -164,21 +164,45 @@ The above steps must be complete before a `vlog` compilation is done.
 
 The `questa.mk` `.o` recipe supports `.svh/.vh` and `.sv/.v` files.
 
-Module files run `vlog` according to the `vlog_cmd` variable in `questa.mk`
+Module files run `vlog` according to the `VLOG_CMD` variable in `questa.mk`
 
 Header files have a special inclusion in their `.d` files.
 
 ```make
-ifeq (,$(findstring +/path/hdl_build/test",$(VLOG_OPTIONS)))
-  VLOG_OPTIONS += "+incdir+/sd/hdl_build/test"
+ifeq (,$(findstring +/path/hdl_build/test",$(VLOG_INCLUDES)))
+  VLOG_INCLUDES += "+incdir+/sd/hdl_build/test"
 endif
 ```
 
-This adds includes the directory that holds the include file to the `VLOG_OPTIONS` `+incdir` parameter. Because of this inclusion, there really isn't any work for the `run_questa.sh` script to do, but it prints a message to acknowledge processing the file.
+This adds includes the directory that holds the include file to the `VLOG_INCLUDES` `+incdir` parameter. Because of this inclusion, there really isn't any work for the `run_questa.sh` script to do, but it prints a message to acknowledge processing the file.
 
 ## Do files
 
 The final step after compilation is to create `.do` files to run `vsim`. The templates are located in `do_files.mk` and are written to `.do` files in the `$(BLD_DIR)`.
+
+# Vivado xsim architecture
+
+Simulation requires modules and packages compilation, headers file inclusion, and script generation to execute the simulator.
+
+## Module and package compilation
+
+The first step in xsim prep is the creation of the libraries. In order to allow parallel compilation of modules, each needs its own library. The `xvlog` command creates the library location before compilation.
+
+## `.o` recipe and run_xilinx.sh
+
+The `xsim.mk` `.o` recipe supports `.svh/.vh` and `.sv/.v` files.
+
+Module files run `xvlog` according to the `XVLOG_CMD` variable in `xsim.mk`
+
+Header files have a special inclusion in their `.d` files.
+
+```make
+ifeq (,$(findstring +/path/hdl_build/test",$(VLOG_INCLUDES)))
+  VLOG_INCLUDES += "+incdir+/sd/hdl_build/test"
+endif
+```
+
+This adds includes the directory that holds the include file to the `VLOG_INCLUDES` `+incdir` parameter. For `xsim`, the `VLOG_INCLUDES` are translated to `--include ...` and become `XVLOG_INCLUDES`. Because of this inclusion, there really isn't any work for the `run_xilinx.sh` script to do, but it prints a message to acknowledge processing the file.
 
 # Quartus architecture
 

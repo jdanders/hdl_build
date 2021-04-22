@@ -89,7 +89,7 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
 ##################### include other build modules ##############################
 
-## select which simulation tool should be used: modelsim, questa or qverify
+## select which simulation tool should be used: modelsim, questa or qverify, vivado
 # SIM_TOOL: set in defaults.mk, upper Makefile, or environment
 -include $(HDL_BUILD_PATH)/defaults.mk
 
@@ -100,6 +100,8 @@ ifdef SIM_TOOL
   include $(HDL_BUILD_PATH)/siemens/questa.mk
  else ifeq (qverify,$(findstring qverify,$(SIM_TOOL)))
   include $(HDL_BUILD_PATH)/siemens/questa.mk
+ else ifeq (vivado,$(findstring vivado,$(SIM_TOOL)))
+  include $(HDL_BUILD_PATH)/xilinx/xsim.mk
  endif
 endif
 
