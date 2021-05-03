@@ -288,13 +288,13 @@ SYNTHSUB_DEP=$(SYNTH_SUB_DONE).tmp
 endif
 
 # Update the substitutions if the SYNTH_SUBSTITUTIONS variable changes
-$(SYNTH_SUB_DONE).tmp: $(DONE_DIR)
+$(SYNTH_SUB_DONE).tmp: | $(DONE_DIR)
 	@echo "$(SYNTH_SUBSTITUTIONS)" > $@
 	@if [ ! -f $(SYNTH_SUB_DONE) ]; then echo "Recording SYNTH_SUBSTITUTIONS" && cp $@ $(SYNTH_SUB_DONE); fi
 $(SYNTH_SUB_DONE): $(SYNTHSUB_DEP)
 	@-diff $@.tmp $@ >/dev/null 2>&1 \
 	    && rm $@.tmp \
-	    || (echo "Updating SYNTH_SUBSTITUTIONS" && mv $@.tmp $@);
+	    || (echo "Updating SYNTH_SUBSTITUTIONS" && mv $@.tmp $@ && rm $(DEP_DIR)/*.quartus.o);
 	@touch $@
 
 
@@ -591,6 +591,7 @@ cp $(PROJECT).sof $(ARCHIVE_DEST)/$(ARCHIVE_FILE_PREFIX)$(TOP_SYNTH).sof
   cp $(STP_FILE) $(ARCHIVE_DEST)/$(ARCHIVE_FILE_PREFIX)$(notdir $(STP_FILE)) || true; \
 fi
 -cp $(PROJECT).qsf $(ARCHIVE_DEST)/$(ARCHIVE_FILE_PREFIX)project.qsf
+-cp $(PROJECT).fit.summary $(ARCHIVE_DEST)/$(ARCHIVE_FILE_PREFIX)project.fit.summary
 mkdir -p $(ARCHIVE_DEST)/$(ARCHIVE_FILE_PREFIX)timequest
 @cp $(SYNTH_DIR)/TQ* $(ARCHIVE_DEST)/$(ARCHIVE_FILE_PREFIX)timequest/ || true
 cp $(TIMING_RPT_FILE) $(ARCHIVE_DEST)/$(ARCHIVE_FILE_PREFIX)timing_rpt.txt
