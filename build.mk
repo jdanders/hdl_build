@@ -14,6 +14,12 @@
 MAKEFLAGS += --no-builtin-rules
 .SUFFIXES:
 
+## Set VERBOSE=1 for a call to make to run fully verbose commands
+# VERBOSE: set in upper Makefile or environment
+
+## Set NOUPDATE=1 for a call to make to print every line instead of updating
+# NOUPDATE: set in upper Makefile or environment
+
 ## Set SLOW=1 for a call to make to disable parallel building
 # SLOW: set in upper Makefile or environment
 

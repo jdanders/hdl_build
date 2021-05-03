@@ -86,6 +86,8 @@ include /path/to/hdl_build/build.mk
 
 The **`build.mk`** file provides the entry point and the basic structure for the build system. Use `make help` for an up-to-date list of targets provided.
 
+* **`VERBOSE`**: Set VERBOSE=1 for a call to make to run fully verbose commands
+* **`NOUPDATE`**: Set NOUPDATE=1 for a call to make to print every line instead of updating
 * **`SLOW`**: Set SLOW=1 for a call to make to disable parallel building
 * **`GIT_REPO`**: this variable is only defined if the Makefile is in a git repository (test if git repo with make's `ifdef`)
 * **`SRC_BASE_DIR`**: directory that holds all relevant source code. Will be determined automatically if in a git repository.
