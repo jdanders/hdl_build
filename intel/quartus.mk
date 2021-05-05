@@ -25,7 +25,7 @@ $(presynth_hook): | $(DONE_DIR)
 	@touch $@
 
 post_qgen_ip_hook := $(DONE_DIR)/post_qgen_ip_hook.done
-## target hook to run after ip generaation is done, before mapping
+## target hook to run after ip generation is done, before mapping
 $(post_qgen_ip_hook): $(DONE_DIR)/qgen_ip.done | $(DONE_DIR)
 	@touch $@
 
