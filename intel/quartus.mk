@@ -512,18 +512,21 @@ $(DONE_DIR)/timing_seq.done: $(DONE_DIR)/asm.done
 TIMING_RPT_CMD := $(HDL_BUILD_PATH)/intel/timing_report_gen.sh $(BLD_DIR) $(TIMING_RPT_FILE)
 
 .PHONY: gen_timing_rpt
+## target to generate TQ_timing_report.txt
 gen_timing_rpt: $(TIMING_RPT_FILE)
-$(TIMING_RPT_FILE): $(DONE_DIR)/timing.done | $(SYNTH_DIR)
+$(TIMING_RPT_FILE): $(DONE_DIR)/timing.done
 	@$(TIMING_RPT_CMD)
 
-.PHONY: gen_timing_rpt_timing
-gen_timing_rpt_timing: $(DONE_DIR)/timing_timing.done
-$(DONE_DIR)/timing_timing.done: $(DONE_DIR)/asm_timing.done | $(DONE_DIR) $(SYNTH_DIR)
+$(DONE_DIR)/timing_rpt_seq.done: $(DONE_DIR)/timing_seq.done
+	@$(TIMING_RPT_CMD)
+	@touch $@
+
+$(DONE_DIR)/timing_timing.done: $(DONE_DIR)/asm_timing.done
 	@$(TIMING_RPT_CMD)
 	@touch $@
 
 .PHONY: run_timing_rpt
-## target to generate TQ_timing_report.txt
+## target to generate TQ_timing_report.txt without checking dependencies
 run_timing_rpt: | $(SYNTH_DIR)
 	@$(TIMING_RPT_CMD)
 
@@ -549,14 +552,14 @@ $(DONE_DIR)/asm_timing.done: $(DONE_DIR)/fit_timing.done
 
 .PHONY: synth
 ## target to run full synthesis: map fit asm timing
-synth: $(DONE_DIR)/synth
-$(DONE_DIR)/synth: $(DONE_DIR)/timing_seq.done
+synth: $(DONE_DIR)/synth.done
+$(DONE_DIR)/synth.done: $(DONE_DIR)/timing_seq.done
 	@touch $@
 
 .PHONY: synth_timing
 ## target to run full synthesis, running fit until timing is made
-synth_timing: $(DONE_DIR)/synth_timing
-$(DONE_DIR)/synth_timing: $(DONE_DIR)/timing_timing.done
+synth_timing: $(DONE_DIR)/synth_timing.done
+$(DONE_DIR)/synth_timing.done: $(DONE_DIR)/timing_timing.done
 	@touch $@
 
 
@@ -608,12 +611,12 @@ archive_synth_results:
 
 .PHONY: synth_archive
 ## target to run full synthesis and archive when done
-synth_archive: $(DONE_DIR)/synth
+synth_archive: $(DONE_DIR)/timing_rpt_seq.done
 	$(do-archive)
 
 .PHONY: synth_archive_timing
 ## target to run full synthesis, running fit until timing is made, and archive when done
-synth_archive_timing: $(DONE_DIR)/synth_timing
+synth_archive_timing: $(DONE_DIR)/synth_timing.done
 	$(do-archive)
 
 .PHONY: clean

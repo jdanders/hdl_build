@@ -178,7 +178,7 @@ The **`quartus.mk`** file provides Quartus related targets and consumes the depe
 * **`DEVICE`**: identify the FPGA device part number, should match Quartus string in project settings
 * **`NUM_TIMING_TRIES`**: tell synth_timing number of tries before giving up on timing
 * **`$(presynth_hook)`**: target hook to run before any synth work
-* **`$(post_qgen_ip_hook)`**: target hook to run after ip generaation is done, before mapping
+* **`$(post_qgen_ip_hook)`**: target hook to run after ip generation is done, before mapping
 * **`printquartus-%`**: use `make printquartus-VAR_NAME` to print variable after Quartus processing
 * **`SYNTH_OVERRIDE`**: synthesis enforces `SYNTH_TOOL` version match against tool on `PATH`. Run make with `SYNTH_OVERRIDE=1` to ignore the check.
 * **`SYNTH_SUBSTITUTIONS`**: a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `examples/example-subs.yml`.
@@ -202,7 +202,8 @@ The **`quartus.mk`** file provides Quartus related targets and consumes the depe
 * **`fit`**: target to run through Quartus fit
 * **`asm`**: target to run through Quartus assembler (no timing)
 * **`timing`**: target to run through Quartus timing (no assembler)
-* **`run_timing_rpt`**: target to generate TQ_timing_report.txt
+* **`gen_timing_rpt`**: target to generate TQ_timing_report.txt
+* **`run_timing_rpt`**: target to generate TQ_timing_report.txt without checking dependencies
 * **`fit_timing`**: target to run fit until timing is made
 * **`asm_timing`**: target to Quartus assembler after running fit until timing is made
 * **`synth`**: target to run full synthesis: map fit asm timing
