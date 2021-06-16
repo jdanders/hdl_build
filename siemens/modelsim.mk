@@ -67,9 +67,9 @@ endif
 
 ##################### Simulation Parameters ##############################
 
-SUPRESS_PARAMS := +nowarnTFMPC
+SUPPRESS_PARAMS := +nowarnTFMPC
 
-MSIM_VOPT := $(SUPRESS_PARAMS) $(strip +acc $(VOPT_OPTIONS))
+MSIM_VOPT := $(SUPPRESS_PARAMS) $(strip +acc $(VOPT_OPTIONS))
 
 MS_INI := $(BLD_DIR)/modelsim.ini
 MS_INI_PARAM := -modelsimini $(MS_INI)

@@ -96,12 +96,12 @@ else
   VSIM_LDFLAGS := -ldflags "$(shell $(CONFIG_UTIL) --ldflags --embed)"
 endif
 
-SUPRESS_PARAMS := +nowarnTFMPC
+SUPPRESS_PARAMS := +nowarnTFMPC
 
 MS_INI := $(BLD_DIR)/modelsim.ini
 MS_INI_PARAM := -modelsimini $(MS_INI)
 
-VOPT_PARAMS := $(SUPRESS_PARAMS) $(MS_INI_PARAM) $(strip +acc $(VOPT_OPTIONS))
+VOPT_PARAMS := $(SUPPRESS_PARAMS) $(MS_INI_PARAM) $(strip +acc $(VOPT_OPTIONS))
 
 # Create list of libraries to use for vlog and vsim
 # In order to build in parallel, each module is in a separate lib
