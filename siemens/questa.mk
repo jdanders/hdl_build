@@ -140,14 +140,11 @@ filelist_sim: $(DEP_DIR)/$(SIEMENS_TOP).questa.d
 modules_sim: $(DEP_DIR)/$(SIEMENS_TOP).questa.d
 	@echo $(SIM_TOP_DEPS)
 
-# TODO: On some simulations, vopt fails the first time. FIXME!
-# for example: cedarbreaks/tie_fpga/tie_system_sim/build_bad_ip_frag
 VOPT_CMD := "vopt -sv -work $(SIM_LIB_DIR)/$(SIEMENS_TOP) $(VOPT_PARAMS) $(SIM_LIB_LIST) $(SIM_PARAM) $(SIM_LIB_DIR)/$(SIEMENS_TOP).$(SIEMENS_TOP) -o $(SIEMENS_TOP)_opt"
 VOPT_MSG := "$O Optimizing design $C (see $(BLOG_DIR)/vopt.log)"
 
 $(VOPT_DONE): $(DEP_DIR)/$(SIEMENS_TOP).questa.o $(PARAMETER_DONE) | $(DONE_DIR)
-	@$(BUILD_SCRIPTS)/run_print_warn_and_err.sh $(VOPT_MSG) $(VOPT_CMD) $(BLOG_DIR)/vopt.log \
-	 || (echo -e "$O Only a problem if second vopt attempt fails... $C" && $(BUILD_SCRIPTS)/run_print_warn_and_err.sh  $(VOPT_MSG) $(VOPT_CMD) $(BLOG_DIR)/vopt.log)
+	@$(BUILD_SCRIPTS)/run_print_warn_and_err.sh $(VOPT_MSG) $(VOPT_CMD) $(BLOG_DIR)/vopt.log
 	@touch $(VOPT_DONE)
 
 
