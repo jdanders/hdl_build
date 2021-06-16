@@ -17,7 +17,7 @@ set_global_assignment -name TOP_LEVEL_ENTITY $(TOP_SYNTH)
 set_global_assignment -name TIMEQUEST_DO_CCPP_REMOVAL ON
 
 set_global_assignment -name SYNCHRONIZER_IDENTIFICATION AUTO
-set_global_assignment -name ALLOW_POWER_UP_DONT_CARE OFF
+# set_global_assignment -name ALLOW_POWER_UP_DONT_CARE OFF
 
 # set_global_assignment -name ENABLE_INIT_DONE_OUTPUT ON
 # set_global_assignment -name ENABLE_OCT_DONE ON
