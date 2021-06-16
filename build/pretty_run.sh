@@ -24,4 +24,5 @@ if [ -z ${VERBOSE} ]; then
     fi
 else
     eval "${cmd}" | tee ${logfile} 2>&1
+    exit ${PIPESTATUS[0]}
 fi
