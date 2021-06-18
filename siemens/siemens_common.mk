@@ -37,18 +37,12 @@ $(SIM_LIB_DIR):
 	@mkdir -p $(SIM_LIB_DIR)
 
 ##### Upper Makefile simulation settings ####
-## options for `vlog` command
+## extra options for `vlog` command
 # VLOG_OPTIONS : set in upper Makefile
-## options for `vlog` coverage
-# VLOG_COVER_OPT : set in upper Makefile
-## options for `vopt` command
+## extra options for `vopt` command
 # VOPT_OPTIONS : set in upper Makefile
-## options for `vsim` command
+## extra options for `vsim` command
 # VSIM_OPTIONS : set in upper Makefile
-## options for `vsim` coverage
-# VSIM_COVER_OPT : set in upper Makefile
-## commands to add to batch for coverage
-# COV_COMMANDS : set in upper Makefile
 
 
 # In order to more closely simulate hardware conditions, default all registers to '0' instead of 'X'
@@ -60,11 +54,11 @@ $(SIM_LIB_DIR):
 #   before written in always_comb or always @* block".
 # Disable warnings about "Too few port connections" and "Some checking for
 #   conflicts with always_comb and always_latch variables not yet supported."
-VLOG_PARAMS := $(VLOG_OPTIONS) $(VLOG_INCLUDES) $(MS_INI_PARAM) +initreg+0 +initmem+0 -error 2182 +nowarnSVCHK $(VLOG_COVER_OPT) $(MSIM_VOPT)
+VLOG_PARAMS := $(VLOG_OPTIONS) $(VLOG_INCLUDES) $(MS_INI_PARAM) +initreg+0 +initmem+0 -error 2182 +nowarnSVCHK $(MSIM_VOPT)
 
 WLF_PARAM := -wlf $(BLD_DIR)/vsim.wlf
-# set VSIM_COVER_OPT=-coverage to run a coverage test
-VSIM_PARAMS := -msgmode both -t 1ps -permit_unmatched_virtual_intf $(MSIM_VSIM) $(SUPPRESS_PARAMS) $(WLF_PARAM) $(MS_INI_PARAM) $(VSIM_COVER_OPT) $(VSIM_OPTIONS) $(VSIM_LDFLAGS)
+
+VSIM_PARAMS := -msgmode both -t 1ps -permit_unmatched_virtual_intf $(MSIM_VSIM) $(SUPPRESS_PARAMS) $(WLF_PARAM) $(MS_INI_PARAM) $(VSIM_OPTIONS) $(VSIM_LDFLAGS)
 
 SIM_LAST_DEPS := $(SIM_LIB_DIR)/sim_top_deps
 
@@ -72,7 +66,7 @@ SIM_LAST_DEPS := $(SIM_LIB_DIR)/sim_top_deps
 # before the simulator exits.  Without that, if someone used a $finish
 # at the end of their simulation the simulator would exit right after
 # run -all and skip any commands that come after that.
-BATCH_OPTIONS := -batch -do "onfinish stop; run -all; $(COV_COMMANDS); exit"
+BATCH_OPTIONS := -batch -do "onfinish stop; run -all; exit"
 # Elaboration should just quit as soon as it starts
 ELAB_OPTIONS := -batch -do "exit"
 
@@ -203,7 +197,7 @@ batch: $(PARAMETER_DONE) $(PRESIM_GOAL) $(presim_hook)
 	@if $(HDL_BUILD_PATH)/siemens/run_siemens.sh "./$(BATCH_SCRIPT)" \
 	    "./$(BATCH_SCRIPT)" "$(BLOG_DIR)/batch.log" ; then \
 	     echo -e "$(GREEN)# Simulation successful $C"; \
-	 fi;
+	 else false; fi;
 
 .PHONY: autocheck_batch
 ## (or `ac_batch`) Run autocheck in console only

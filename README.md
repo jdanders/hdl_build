@@ -131,18 +131,27 @@ The **`modelsim.mk`** or **`questa.mk`** file provides simulator related targets
     * `do bld/restart.do log run 100 ns` will log things and then run for 100 ns. It can be helpful to tie the command to a keyboard shortcut.
 * **`RESIM_SCRIPT`**: `bld/resim.do` can be used in the simulator to recompile source and restart the simulation using `quit -sim`. The current session and waveform is backed up first and the transcript is archived and cleared. The first optional parameter is `log` which will log all signals and memories after restart. Following parameters will be executed after restart.
     * `do bld/resim.do log run 100 ns` will log things and then run for 100 ns. It can be helpful to tie the command to a keyboard shortcut.
-* **`VLOG_OPTIONS`**: options for `vlog` command
-* **`VLOG_COVER_OPT`**: options for `vlog` coverage
-* **`VOPT_OPTIONS`**: options for `vopt` command
-* **`VSIM_OPTIONS`**: options for `vsim` command
-* **`VSIM_COVER_OPT`**: options for `vsim` coverage
-* **`COV_COMMANDS`**: commands to add to batch for coverage
+* **`VLOG_OPTIONS`**: extra options for `vlog` command
+* **`VOPT_OPTIONS`**: extra options for `vopt` command
+* **`VSIM_OPTIONS`**: extra options for `vsim` command
 * **`PARAM_*`**: monitors variables prefixed with **`PARAM_`** and passes them to simulator. `PARAM_NUM_PACKETS := 20` passes a parameter named NUM_PACKETS with value of 20.
 * **`sim`**: target to run simulation in GUI
 * **`elab_sim`**: target to run elaboration batch
 * **`batch`**: target to run simulation batch
 * **`autocheck_batch`**: (or `ac_batch`) Run autocheck in console only
 * **`autocheck`**: (or `ac`) Run autocheck GUI
+* **`COV_COVER_OPT`**: Coverage options for `vopt` command
+* **`COV_MERGED_UCDB`**: Location to store result of accumulated coverage report
+* **`COV_VSIM_OPT`**: Coverage options for `vsim` command
+* **`COVERAGE_COMMANDS`**: commands to add to batch for coverage
+* **`vopt_coverage`**: target to perform vopt for coverage after compile
+* **`sim_coverage`**: target to run simulation in GUI with coverage
+* **`elab_coverage`**: target to run elaboration batch for coverage
+* **`batch_coverage`**: target to run simulation batch with coverage
+* **`batch_accumulate_coverage`**: target to run simulation batch with coverage that accumulates
+* **`coverage_view`**: target to view coverage
+* **`coverage_view_all`**: target to view accumulated coverage
+* **`clean_cover_db`**: target to remove accumulated coverage ucdb file
 
 
 ### vivado xsim.mk

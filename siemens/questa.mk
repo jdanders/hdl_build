@@ -189,3 +189,4 @@ printquesta-%:
 	@echo '$* = $($*)'
 
 include $(HDL_BUILD_PATH)/siemens/siemens_common.mk
+include $(HDL_BUILD_PATH)/siemens/questa_coverage.mk

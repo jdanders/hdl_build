@@ -12,7 +12,7 @@ success_cmd=$(cat <<EOF
            echo -e "${RED}# Error detected $C (see ${logfile})"
            false
        else if GREP_COLOR="0;40;1;33" grep -P --color \
-             "(Warning[ :]|\*?[*#] (Note: \((?!vlog-2286\))|Warnining: \())" ${logfile}; then
+             "(Warning[ :]|\*?[*#] (Note: \((?!vlog-2286\))|Warning: \())" ${logfile}; then
            echo -e "$O No errors but please check warnings in ${logfile} $C"
            echo
        else
@@ -20,7 +20,9 @@ success_cmd=$(cat <<EOF
        fi; fi
 EOF
 )
+# TODO: ignore vcover-17363 missing modules until module list improves
 fail_cmd=$(cat <<EOF
+       if grep -q vcover-17363 ${logfile}; then echo "Module doesn't exist"; exit 0; fi
        GREP_COLOR="0;40;1;33" grep --no-group-separator -A1 -E --color "\*?[*#] Warning[ :]" \
            ${logfile}
        grep --no-group-separator -A1 -E --color \
