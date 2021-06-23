@@ -122,12 +122,12 @@ batch_accumulate_coverage: $(COV_UCDB)
 .PHONY: coverage_view
 ## target to view coverage
 coverage_view:
-	vsim -viewcov $(COV_UCDB) &
+	vsim -gui -viewcov $(COV_UCDB) &
 
 .PHONY: coverage_view_all
 ## target to view accumulated coverage
 coverage_view_all:
-	vsim -viewcov $(COV_MERGED_UCDB) &
+	vsim -gui -viewcov $(COV_MERGED_UCDB) &
 
 .PHONY: clean
 clean: clean_questa_coverage
