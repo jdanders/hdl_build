@@ -2,8 +2,8 @@
 
 COV_VOPT_DONE := $(DONE_DIR)/cov_vopt.done
 
-## Coverage options for `vopt` command
-COV_COVER_OPT := +cover=bcestf
+## Coverage options for `vopt` command (not enable toggle coverage)
+COV_COVER_OPT := +cover=bcesf
 COV_VOPT_PARAMS := $(SUPPRESS_PARAMS) $(MS_INI_PARAM) $(COV_COVER_OPT) $(strip +acc $(VOPT_OPTIONS))
 
 COV_UCDB := $(BLD_DIR)/coverage.ucdb
@@ -27,7 +27,7 @@ $(COV_VOPT_DONE): $(DEP_DIR)/$(SIEMENS_TOP).questa.o $(PARAMETER_DONE) | $(DONE_
 COV_VSIM_OPT := -coverage
 
 ## commands to add to batch for coverage
-COVERAGE_COMMANDS := coverage report -output $(BLD_DIR)/report.txt -assert -directive -cvg -codeAll; coverage save -testname $(SIEMENS_TOP).$(COV_TEST_TIME) $(COV_UCDB)
+COVERAGE_COMMANDS := coverage report -output $(BLD_DIR)/coverage_report.txt -assert -directive -cvg -codeAll; coverage save -testname $(SIEMENS_TOP).$(COV_TEST_TIME) $(COV_UCDB)
 
 .PHONY: vopt_coverage
 ## target to perform vopt for coverage after compile
