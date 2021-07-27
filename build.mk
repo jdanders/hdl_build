@@ -14,13 +14,13 @@
 MAKEFLAGS += --no-builtin-rules
 .SUFFIXES:
 
-## Set VERBOSE=1 for a call to make to run fully verbose commands
+## Set `VERBOSE=1` to run fully verbose commands
 # VERBOSE: set in upper Makefile or environment
 
-## Set NOUPDATE=1 for a call to make to print every line instead of updating
+## Set `NOUPDATE=1` to print every line instead of updating
 # NOUPDATE: set in upper Makefile or environment
 
-## Set SLOW=1 for a call to make to disable parallel building
+## Set `SLOW=1` to disable parallel building
 # SLOW: set in upper Makefile or environment
 
 # Enable parallel processing by default
@@ -40,19 +40,19 @@ include $(BUILD_SCRIPTS)/color.mk
 # In git repo?
 GIT_ROOT := $(shell $(BUILD_SCRIPTS)/git_root_path)
 ifneq (Could not find git root path,$(GIT_ROOT))
-## this variable is only defined if the Makefile is in a git repository (test if git repo with make's `ifdef`)
+## this variable is only defined if the Makefile is in a git repository (test `ifdef GIT_REPO` in makefile to check if in git repo)
   GIT_REPO := $(GIT_ROOT)
 endif
 # If not a git repo, define SRC_BASE_DIR outside of hdl_build
 ifdef GIT_REPO
-## directory that holds all relevant source code. Will be determined automatically if in a git repository.
+## directory that holds all relevant source code. Will be assumed to be the current repo if in a git repository.
   SRC_BASE_DIR := $(GIT_ROOT)
 endif
 # Make SRC_BASE_DIR available to sub commands
 export SRC_BASE_DIR
 
 
-## `touch .ignore_build_system` in a directory that should be ignored by the build system
+## Default value: `touch .ignore_build_system` in a directory that should be ignored by the build system. Changing this variable will change then name of the file.
 IGNORE_FILE := .ignore_build_system
 
 

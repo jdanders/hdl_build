@@ -2,7 +2,7 @@
 
 COV_VOPT_DONE := $(DONE_DIR)/cov_vopt.done
 
-## Coverage options for `vopt` command (not enable toggle coverage)
+## Coverage options for `vopt` command (default does not enable toggle coverage)
 COV_COVER_OPT := +cover=bcesf
 COV_VOPT_PARAMS := $(SUPPRESS_PARAMS) $(MS_INI_PARAM) $(COV_COVER_OPT) $(strip +acc $(VOPT_OPTIONS))
 

@@ -12,11 +12,16 @@ Run `make help` for a list of targets, and `make helpall` for descriptions.
 
 To get started
 
-* clone or copy the hdl_build repository
+* clone or copy the hdl_build repository to a locally accessible directory. Optionally set `$HDL_BUILD_PATH` to the path of the hdl_build repository.
 * to choose global default tools, create `defaults.mk`, or locally set `SIM_TOOL` and/or `SYNTH_TOOL` in your makefile
     * `defaults.mk` is placed in the root of the hdl_build repo. See `examples/example-defaults.mk` for a template
+    * Valid `SIM_TOOL` values are `modelsim`, `questa`, `qverify`, `vivado`
+    * Valid `SYNTH_TOOL` values are `quartus`, `quartuspro`, `vivado`
+    * The `SIM_TOOL` or `SYNTH_TOOL` value should have the tool name, optionally followed by version
+        * Synthesis will check that the tool install path has the value of `SYNTH_TOOL` in the path. The intent is to ensure that the correct tool is being used for the specific makefile. For example, a `SYNTH_TOOL` value of quartus_20.1 will throw an error if `which quartus_sh` contains the string quartuspro_20.1 or quartus_20.2.
+        * To disable this feature, add `SYNTH_OVERRIDE=1` to your `defaults.mk` file.
 * copy the `examples/example.mk` file to your project build directory and rename it to `Makefile`
-    * `example.mk` has the minimum for both sim and synth targets, with a QSF_EXTRA setting that will allow synthesis without worrying about pin assignments.
+    * `example.mk` has the minimum for both sim and synth targets, with a `QSF_EXTRA` setting that will allow synthesis without worrying about pin assignments.
     * See `examples/example-full-sim.mk` and `examples/example-full-synth.mk` for examples of more options
 * edit `Makefile`
     * add the correct simulation top module name as `TOP_SIM` and/or correct synthesis top module name as `TOP_SYNTH`
@@ -38,7 +43,7 @@ Quartus synthesis requires two variables in the use Makefile to create a project
 * `DEVICE`, for example `DEVICE := 10AS123N2F40I2SG`
 
 
-Quartus install path must have the string "pro" in it if using Quartus Pro, and must not have "pro" in it if using Quartus Standard. The default path name of `intelFPGA_pro` meets this requirement.
+Quartus install path must have the string "pro" in it if using Quartus Pro, and must not have "pro" in it if using Quartus Standard. The default path name of `intelFPGA_pro` meets this requirement, but it is recommended to include the `SYNTH_TOOL` string in the path, like `quartuspro_20.1`.
 
 Python 3.6 or higher is required, with the PyYAML yaml package installed for substitution files. If Python 3.6 is not available, replace all the 'f' strings with .format strings.
 
@@ -75,10 +80,10 @@ or
 include /path/to/hdl_build/build.mk
 ```
 
-* As a general guide:
-    * variables used under `build.mk` need to be set before the include.
-    * hooks are rules defined under `build.mk` need to be tied into after the include.
-* The tool chain needs an entry point defined, such as `TOP_SIM` for simulation and `TOP_SYNTH` for synthesis.
+* As a general guide regarding where to include `build.mk` in your Makefile:
+    * variables to be used by `hdl_build` need to be set before the include.
+    * target hooks (like `$(presim_hook)`) defined by `hdl_build` need to be tied into after the include.
+* Dependency analysis needs an entry point defined, such as `TOP_SIM` for simulation and `TOP_SYNTH` for synthesis.
 
 ## Build parameters and targets
 
@@ -86,12 +91,12 @@ include /path/to/hdl_build/build.mk
 
 The **`build.mk`** file provides the entry point and the basic structure for the build system. Use `make help` for an up-to-date list of targets provided.
 
-* **`VERBOSE`**: Set VERBOSE=1 for a call to make to run fully verbose commands
-* **`NOUPDATE`**: Set NOUPDATE=1 for a call to make to print every line instead of updating
-* **`SLOW`**: Set SLOW=1 for a call to make to disable parallel building
-* **`GIT_REPO`**: this variable is only defined if the Makefile is in a git repository (test if git repo with make's `ifdef`)
-* **`SRC_BASE_DIR`**: directory that holds all relevant source code. Will be determined automatically if in a git repository.
-* **`IGNORE_FILE`**: `touch .ignore_build_system` in a directory that should be ignored by the build system
+* **`VERBOSE`**: Set `VERBOSE=1` to run fully verbose commands
+* **`NOUPDATE`**: Set `NOUPDATE=1` to print every line instead of updating
+* **`SLOW`**: Set `SLOW=1` to disable parallel building
+* **`GIT_REPO`**: this variable is only defined if the Makefile is in a git repository (test `ifdef GIT_REPO` in makefile to check if in git repo)
+* **`SRC_BASE_DIR`**: directory that holds all relevant source code. Will be assumed to be the current repo if in a git repository.
+* **`IGNORE_FILE`**: Default value: `touch .ignore_build_system` in a directory that should be ignored by the build system. Changing this variable will change then name of the file.
 * **`BLD_DIR`**: directory where build results are stored
 * **`$(predependency_hook)`**: target hook to run something before dependency analysis
 * **`SIM_TOOL`**: select which simulation tool should be used: modelsim, questa or qverify, vivado
@@ -140,7 +145,7 @@ The **`modelsim.mk`** or **`questa.mk`** file provides simulator related targets
 * **`batch`**: target to run simulation batch
 * **`autocheck_batch`**: (or `ac_batch`) Run autocheck in console only
 * **`autocheck`**: (or `ac`) Run autocheck GUI
-* **`COV_COVER_OPT`**: Coverage options for `vopt` command
+* **`COV_COVER_OPT`**: Coverage options for `vopt` command (default does not enable toggle coverage)
 * **`COV_MERGED_UCDB`**: Location to store result of accumulated coverage report
 * **`COV_VSIM_OPT`**: Coverage options for `vsim` command
 * **`COVERAGE_COMMANDS`**: commands to add to batch for coverage
@@ -148,7 +153,7 @@ The **`modelsim.mk`** or **`questa.mk`** file provides simulator related targets
 * **`sim_coverage`**: target to run simulation in GUI with coverage
 * **`elab_coverage`**: target to run elaboration batch for coverage
 * **`batch_coverage`**: target to run simulation batch with coverage
-* **`batch_accumulate_coverage`**: target to run simulation batch with coverage that accumulates
+* **`batch_accumulate_coverage`**: target to run simulation batch with accumulated coverage
 * **`coverage_view`**: target to view coverage
 * **`coverage_view_all`**: target to view accumulated coverage
 * **`clean_cover_db`**: target to remove accumulated coverage ucdb file
