@@ -12,17 +12,19 @@ echo -e "\n" >> ${logfile}.cmds
 
 if [ -z ${VERBOSE} ]; then
     echo -e "${msg}"; echo "${cmd}" > ${logfile}
-    if (eval "${cmd}") >> ${logfile} 2>&1; then
-        (eval "${success_cmd}")
-    else
-        c=$?
-        echo
-        echo -e "${RED}Bad result from previous command${NC}: (see ${logfile})"
-        echo ----------------
-        (eval "${fail_cmd}")
-        exit $c
-    fi
+    (eval "${cmd}") >> ${logfile} 2>&1
+    RESULT=$?
 else
     eval "${cmd}" | tee ${logfile} 2>&1
-    exit ${PIPESTATUS[0]}
+    RESULT=${PIPESTATUS[0]}
+fi
+
+if [ ${RESULT} -eq 0 ]; then
+    (eval "${success_cmd}")
+else
+    echo
+    echo -e "${RED}Bad result from previous command${NC}: (see ${logfile})"
+    echo ----------------
+    (eval "${fail_cmd}")
+    exit ${RESULT}
 fi
