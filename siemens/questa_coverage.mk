@@ -7,8 +7,11 @@ COV_COVER_OPT := +cover=bcesf
 COV_VOPT_PARAMS := $(SUPPRESS_PARAMS) $(MS_INI_PARAM) $(COV_COVER_OPT) $(strip +acc $(VOPT_OPTIONS))
 
 COV_UCDB := $(BLD_DIR)/coverage.ucdb
+ifndef COV_MERGED_UCDB
 ## Location to store result of accumulated coverage report
-COV_MERGED_UCDB := /tmp/coverage_merged_$(USER).ucdb
+  COV_MERGED_UCDB := /tmp/coverage_merged_$(USER).ucdb
+endif
+
 
 COV_TEST_TIME := $(shell date +%s.%N)
 
