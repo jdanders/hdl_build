@@ -11,15 +11,15 @@ endef
 
 # This is the makefile that will be generated to create IP and QSYS files
 define ip_makefile_raw
-$(IP_DIR)/$*/$*.qip: $(IP_DIR)/$*.$(ftype)
-	@-rm -rf $(IP_DIR)/$*/
+$(IP_DIR)/$${MNAME}/$${MNAME}.qip: $(IP_DIR)/$${MNAME}.$(ftype)
+	@-rm -rf $(IP_DIR)/$${MNAME}/
 	@$(BUILD_SCRIPTS)/run_print_err_only.sh \
-	   "Generating $(ftype) $* (started $(DATE))" \
-	   "$(QGEN_IP) $(ipsearch) $(IPGEN_ARGS)$(IP_DIR)/$*.$(ftype)" \
-	   $(BLOG_DIR)/$(ftype)_ipgen_$*.log
-	@-cp -a $(IP_DIR)/$*/synthesis/* $(IP_DIR)/$* 2>/dev/null || true
+	   "Generating $(ftype) $${MNAME} (started $(DATE))" \
+	   "$(QGEN_IP) $(ipsearch) $(IPGEN_ARGS)$(IP_DIR)/$${MNAME}.$(ftype)" \
+	   $(BLOG_DIR)/$(ftype)_ipgen_$${MNAME}.log
+	@-cp -a $(IP_DIR)/$${MNAME}/synthesis/* $(IP_DIR)/$${MNAME} 2>/dev/null || true
 
-$(DONE_DIR)/qgen_ip.done: $(IP_DIR)/$*/$*.qip
+$(DONE_DIR)/qgen_ip.done: $(IP_DIR)/$${MNAME}/$${MNAME}.qip
 
 endef
 
@@ -53,15 +53,32 @@ echo "set_global_assignment -name SOURCE_FILE $(fpath)" > $(FILES_TCL).$*
 endef
 
 # Qsys files get copied, maybe updated to Pro, and added to IP_MK qnd QSF file
+# If directory named 'ip' exists, copy that too for compatibility
 define qsys_cmd_raw
-cp $(fpath) $(IP_DIR)/$*.qsys &&
+cp $(fpath) $(IP_DIR)/$*.qsys
 if [[ "$(PRO_VERSION)" == "pro" ]] &&
       ! grep -q "tool=\"QsysPro\"" $(IP_DIR)/$*.qsys; then
     perl -pi -e "s^\\<component\\n^\\<component\\n   tool=\"QsysPro\"\\n^igs" -0 $(IP_DIR)/$*.qsys
-fi &&
+fi
 
-echo -e "$(ip_makefile)" > $(IP_MK).$* &&
-echo "set_global_assignment -name QIP_FILE $(IP_DIR)/$*/$*.qip" > $(FILES_TCL).$* &&
+# Extra work for multi-IP qsys: copy ip as needed, also add sub ip as deps
+F_IP=$$(dirname $(fpath))/ip
+if [ -d $${F_IP} ]; then
+    cp -a $${F_IP} $(IP_DIR)/
+    for IPPATH in $$(find $${F_IP} -name "*.ip"); do
+	MNAME=$$(basename $${IPPATH} .ip)
+        mkdir -p $(IP_DIR)/ip/$*
+        ln -s $(IP_DIR)/$${MNAME} $(IP_DIR)/ip/$*/
+	cp $${IPPATH} $(IP_DIR)/
+        echo -e "$(ip_makefile)" > $(IP_MK).$${MNAME}
+	sed -i "s/\\.qsys/.ip/g" $(IP_MK).$${MNAME}
+        echo "set_global_assignment -name QIP_FILE $(IP_DIR)/$${MNAME}/$${MNAME}.qip" > $(FILES_TCL).$${MNAME}
+    done
+fi
+
+MNAME=$*
+echo -e "$(ip_makefile)" > $(IP_MK).$*
+echo "set_global_assignment -name QIP_FILE $(IP_DIR)/$*/$*.qip" > $(FILES_TCL).$*
 echo "set_global_assignment -name IP_SEARCH_PATHS $(fdir)" >> $(FILES_TCL).$*
 
 endef
@@ -69,8 +86,9 @@ endef
 
 # IP files need to be copied and added to IP_MK and QSF file
 define ip_cmd_raw
-cp $(fpath) $(IP_DIR)/$*.ip &&
-echo -e "$(ip_makefile)" > $(IP_MK).$* &&
+cp $(fpath) $(IP_DIR)/$*.ip
+export MNAME=$*
+echo -e "$(ip_makefile)" > $(IP_MK).$*
 echo "set_global_assignment -name QIP_FILE $(IP_DIR)/$*/$*.qip" > $(FILES_TCL).$*
 
 endef
@@ -78,7 +96,7 @@ endef
 
 # Megawizard .v files need to be added to IP_MK and QSF file
 define qmegawiz_cmd_raw
-echo -e "$(qmegawiz_makefile)" > $(IP_MK).$* &&
+echo -e "$(qmegawiz_makefile)" > $(IP_MK).$*
 echo "set_global_assignment -name QIP_FILE $(IP_DIR)/$*/$*.qip" > $(FILES_TCL).$*
 
 endef
