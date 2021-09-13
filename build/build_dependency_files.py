@@ -5,15 +5,15 @@ import yaml
 import argparse
 from find_dependencies import find_deps
 
-if (os.popen('git rev-parse --is-inside-work-tree 2> /dev/null').read()):
-    filelist_cmd = (
-        "git ls-files --cached --modified --others --full-name "
-        "--exclude-standard {srcbase} | grep -i -e '.sv$' -e '.svh$' "
-        "-e '.v$' -e '.vh$' -e {ignorefile}")
-else:
-    # Git ls-files is faster, but if not using git, this command works
-    filelist_cmd = ("find {srcbase} | grep -i -e '.sv$' -e '.svh$' "
-                    "-e '.v$' -e '.vh$' -e {ignorefile}")
+filelist_git_cmd = (
+    "cd {srcbase} && git ls-files --cached --modified --others "
+    "--full-name --exclude-standard {srcbase} | grep -i "
+    "-e '\\.sv$' -e '\\.svh$' -e '\\.v$' -e '\\.vh$' -e {ignorefile}")
+
+# Git ls-files is faster, but if not using git, this command works
+filelist_find_cmd = ("find {srcbase} | grep -i -e '\\.sv$' -e '\\.svh$' "
+                     "-e '\\.v$' -e '\\.vh$' -e {ignorefile}")
+
 
 svh_hdr = """ifeq (,$(findstring +{dirpath}",$(VLOG_INCLUDES)))
   VLOG_INCLUDES += "+incdir+{dirpath}"
@@ -60,7 +60,7 @@ def parse_yaml(args, path):
 
 def parse_subs_yaml(args):
     subs_dict = {}
-    subs = args.subsfilelist.replace('"','').replace("'",'')
+    subs = args.subsfilelist.replace('"', '').replace("'", '')
     subs_files = [subs_map.strip() for subs_map in subs.split()]
     for subs_map in subs_files:
         if subs_map:
@@ -120,7 +120,7 @@ def write_depfile(name, filelist, subs_dict, args):
     else:
         deps = find_deps(path, name, text, args)
     print(f"Processing dependencies for {name}: {deps}")
-    #print(deps, path, name, args)
+
     for dep in deps:
         # TODO: find better way to remove dependency loops
         if (name == "lib_pkt_if_macros.svh"):
@@ -152,7 +152,7 @@ def write_depfile(name, filelist, subs_dict, args):
     for prefix in prefixes:
         ostrings[prefix] += "\n"
         dstrings[prefix] += "\n"
-    #svstring += "\n"
+
     for prefix in prefixes:
         fname = os.path.join(args.outdir, f"{name}.{prefix}.d")
         open(fname, 'w').write(ostrings[prefix] + "\n"
@@ -164,14 +164,32 @@ def write_depfile(name, filelist, subs_dict, args):
 
 def main(args):
     # Figure out path to prefix each repo-relative path with
-    if not args.srcbase:
+    if not os.path.isdir(args.srcbase):
         sys.exit(1)
 
-    # Filelist paths are stored as absolute paths
-    fcmd = filelist_cmd.format(srcbase=args.srcbase,
-                               ignorefile=args.ignorefile)
-    filelist = [os.path.join(args.srcbase, ii.strip()) for ii in
-                os.popen(fcmd).readlines()]
+    # Ensure outdir exists
+    os.makedirs(args.outdir, exist_ok=True)
+
+    # Add extra directories to srcbase directory
+    srcdirs = [args.srcbase]
+    if args.extrasubdirs:
+        srcdirs += [d.strip() for d in args.extrasubdirs.split()]
+
+    # Create filelist from all source directories
+    filelist = []
+    for srcdir in srcdirs:
+        # Choose git command if the srcdir is the base of a repo
+        if (os.path.isdir(f"{srcdir}/.git")):
+            fcmd = filelist_git_cmd.format(srcbase=srcdir,
+                                           ignorefile=args.ignorefile)
+        else:
+            fcmd = filelist_find_cmd.format(srcbase=srcdir,
+                                            ignorefile=args.ignorefile)
+        filelist += [os.path.join(srcdir, ii.strip())
+                     for ii in os.popen(fcmd).readlines()
+                     # Don't add duplicate files from extra srcdirs
+                     if not [ff for ff in filelist if ii.strip() in ff]]
+
     # Git lists duplicates, so set filter it
     filelist = list(set(filelist))
     ignoredirs = [os.path.dirname(f) for f in filelist if args.ignorefile in f]
@@ -207,12 +225,15 @@ if __name__ == '__main__':
     argp.add_argument('outprefixlist', help="comma separated list of prefixes"
                       " for the .o files")
     argp.add_argument('name', help="name of module to analyze")
+    argp.add_argument('--extrasubdirs', help="space-separated list of extra "
+                      "full directories to search, honoring ignorefile")
     argp.add_argument('--extradirs', help="space-separated list of extra "
-                      "non-repo directories to search")
+                      "non-repo directories to search, overrides ignores")
     argp.add_argument('--subsfilelist', help="location of yaml files that "
-                        "describe module replacements. Should be space-"
-                        "separated list of files.")
-    argp.add_argument('--ignorefile', nargs='?', default='.ignore_build_system',
+                      "describe module replacements. Should be space-"
+                      "separated list of files.")
+    argp.add_argument('--ignorefile', nargs='?',
+                      default='.ignore_build_system',
                       help="directories containing a file with this "
                       "name will be ignored (default:.ignore_build_system)")
     argp.add_argument('--ignoredirs', help="comma-separated list of "

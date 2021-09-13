@@ -102,7 +102,8 @@ The **`build.mk`** file provides the entry point and the basic structure for the
 * **`SIM_TOOL`**: select which simulation tool should be used: modelsim, questa or qverify, vivado
 * **`SYNTH_TOOL`**: select which synthesis tool should be used: quartuspro, quartus or vivado
 * **`IGNORE_DIRS`**: a list of space delineated directory names to ignore during dependency search
-* **`EXTRA_DIRS`**: a list of space delineated directory names to add during dependency search. This is only useful for directories normally ignored by the build system or a directory outside the `SRC_BASE_DIR` directory.
+* **`EXTRA_DIRS`**: a list of space delineated directory names to add during dependency search. This does not include any subdirectories. This is only useful for directories normally ignored by the build system or a directory outside the `SRC_BASE_DIR` directory.
+* **`EXTRA_SUBDIRS`**: a list of space delineated directory names to add during dependency search including subdirectories. The ignore file is applied to the directory tree. This is only useful for directories outside the `SRC_BASE_DIR` directory.
 * **`clean`**: target to force redo of build steps and remove previous logs
 * **`cleanall`**: target to remove all build results
 * **`nuke`**: target to alias for cleanall

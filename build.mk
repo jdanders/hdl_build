@@ -127,6 +127,11 @@ endif
 -include $(wildcard $(HDL_BUILD_PATH)/*_custom.mk)
 
 
+ifndef SYNTH_TOOL
+  ifndef SIM_TOOL
+    $(error No tools defined, define in your Makefile or $(HDL_BUILD_PATH)/defaults.mk)
+  endif
+endif
 ##################### Module discovery targets ##############################
 
 ## a list of space delineated directory names to ignore during dependency search
@@ -135,13 +140,19 @@ ifdef IGNORE_DIRS
   IGNORE_PARAM := --ignoredirs '$(IGNORE_DIRS)'
 endif
 
-## a list of space delineated directory names to add during dependency search. This is only useful for directories normally ignored by the build system or a directory outside the `SRC_BASE_DIR` directory.
+## a list of space delineated directory names to add during dependency search. This does not include any subdirectories. This is only useful for directories normally ignored by the build system or a directory outside the `SRC_BASE_DIR` directory.
 # EXTRA_DIRS: set in upper Makefile
 ifdef EXTRA_DIRS
-  EXTRA_PARAM := --extradirs '$(EXTRA_DIRS)'
+  DEPS_EXTRA_PARAM += --extradirs '$(EXTRA_DIRS)'
 endif
 
-MAKEDEPEND_CMD := $(BUILD_SCRIPTS)/build_dependency_files.py $(EXTRA_PARAM) --ignorefile $(IGNORE_FILE) $(IGNORE_PARAM) $(SRC_BASE_DIR) $(DEP_DIR)
+## a list of space delineated directory names to add during dependency search including subdirectories. The ignore file is applied to the directory tree. This is only useful for directories outside the `SRC_BASE_DIR` directory.
+# EXTRA_SUBDIRS: set in upper Makefile
+ifdef EXTRA_SUBDIRS
+  DEPS_EXTRA_PARAM += --extrasubdirs '$(EXTRA_SUBDIRS)'
+endif
+
+MAKEDEPEND_CMD := $(BUILD_SCRIPTS)/build_dependency_files.py $(DEPS_EXTRA_PARAM) --ignorefile $(IGNORE_FILE) $(IGNORE_PARAM) $(SRC_BASE_DIR) $(DEP_DIR)
 
 
 ##################### Cleaning targets ##############################
