@@ -42,3 +42,15 @@ esc_fail_cmd=$(printf "%q" "$fail_cmd")
 
 SCRIPT_PATH=$(dirname "$(readlink -f "$0")")
 ${SCRIPT_PATH}/../build/pretty_run.sh "${msg}" "${cmd}" "${logfile}" "${success_cmd}" "${fail_cmd}"
+RESULT=$?
+
+# siemens tools sometimes segfault, try again
+if tail -n4 ${logfile} | grep  "Unexpected signal: 11"; then
+    echo "Segmentation Fault, try again"
+    ${SCRIPT_PATH}/../build/pretty_run.sh "${msg}" "${cmd}" "${logfile}" "${success_cmd}" "${fail_cmd}"
+    RESULT=$?
+    if [ ${RESULT} -eq 0 ]; then
+        exit ${RESULT}
+    fi
+fi
+exit ${RESULT}
