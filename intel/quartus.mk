@@ -75,6 +75,7 @@ MAKEDEP_TOOL_QUARTUS := "quartus"
 # SYNTH_SUBSTITUTIONS: set in upper Makefile
 ifdef SYNTH_SUBSTITUTIONS
   SUBS_QUARTUS := --subsfilelist '$(SYNTH_SUBSTITUTIONS)'
+  SUBS_QUARTUS_MODULES := "$(shell $(BUILD_SCRIPTS)/list_substitutions.py $(SRC_BASE_DIR) '$(SYNTH_SUBSTITUTIONS)')"
 endif
 
 # The .d (dependent) targets are to calculate the dependencies of a file

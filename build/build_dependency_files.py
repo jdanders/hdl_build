@@ -33,9 +33,9 @@ incl_set_string = "{name}_INCLUDE := $(call uniq,"
 seen_deps = []
 
 
-def add_subs_module(args, module, filepath, subs_dict):
+def add_subs_module(srcbase, module, filepath, subs_dict):
     if filepath:
-        fullpath = os.path.join(args.srcbase, filepath.strip())
+        fullpath = os.path.join(srcbase, filepath.strip())
         subs_dict[module.strip()] = fullpath
     else:
         # No path means remove module
@@ -43,35 +43,37 @@ def add_subs_module(args, module, filepath, subs_dict):
     return subs_dict
 
 
-def parse_yaml(args, path):
+def parse_yaml(srcbase, path, verbose):
     subs_dict = {}
     subs = yaml.load(open(path, 'r'), Loader=yaml.Loader)
     for module, filepath in subs.items():
         # Reserved word 'include' is a list of other yaml files
         if module == 'include':
             for path in filepath:
-                fullpath = os.path.join(args.srcbase, path)
-                subs_dict.update(parse_yaml(args, fullpath))
+                fullpath = os.path.join(srcbase, path)
+                subs_dict.update(parse_yaml(srcbase, fullpath, verbose))
         else:
-            print(f"{path} subbed {module}: {filepath}")
-            subs_dict = add_subs_module(args, module, filepath, subs_dict)
+            if verbose:
+                print(f"{path} subbed {module}: {filepath}")
+            subs_dict = add_subs_module(srcbase, module, filepath, subs_dict)
     return subs_dict
 
 
-def parse_subs_yaml(args):
+def parse_subs_yaml(subsfilelist, srcbase, verbose=True):
     subs_dict = {}
-    subs = args.subsfilelist.replace('"', '').replace("'", '')
+    subs = subsfilelist.replace('"', '').replace("'", '')
     subs_files = [subs_map.strip() for subs_map in subs.split()]
     for subs_map in subs_files:
         if subs_map:
             if ':' in subs_map:
                 # Single entries are 'module: filepath'
                 module, filepath = subs_map.split(':')
-                print(f"Direct subs {module}: {filepath}")
-                subs_dict = add_subs_module(args, module, filepath, subs_dict)
+                if verbose:
+                    print(f"Direct subs {module}: {filepath}")
+                subs_dict = add_subs_module(srcbase, module, filepath, subs_dict)
             else:
                 # Otherwise it is a yaml file of entries
-                subs_dict.update(parse_yaml(args, subs_map))
+                subs_dict.update(parse_yaml(srcbase, subs_map, verbose))
     return subs_dict
 
 
@@ -208,7 +210,7 @@ def main(args):
 
     subs_dict = {}
     if args.subsfilelist:
-        subs_dict = parse_subs_yaml(args)
+        subs_dict = parse_subs_yaml(args.subsfilelist, args.srcbase)
 
     name = args.name
 

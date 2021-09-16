@@ -28,6 +28,7 @@ MAKEDEP_TOOL_QUESTA := "questa"
 # SIM_SUBSTITUTIONS: set in upper Makefile
 ifdef SIM_SUBSTITUTIONS
   SUBS_QUESTA := --subsfilelist '$(SIM_SUBSTITUTIONS)'
+  SUBS_QUESTA_MODULES := $(shell $(BUILD_SCRIPTS)/list_substitutions.py $(SRC_BASE_DIR) '$(SIM_SUBSTITUTIONS)')
 endif
 
 # The .d (dependent) targets are to calculate the dependencies of a file

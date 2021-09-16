@@ -108,6 +108,7 @@ $(COV_UCDB): $(PARAMETER_DONE) $(COV_DO_DONE) $(COV_VOPT_DONE) $(presim_hook)
 COV_ADD_MERGE_CMD := vcover merge -note 6821 -du $${submod} $(COV_UCDB).$${submod} $(COV_UCDB) && vcover merge -note 6821 $(COV_MERGED_UCDB) $(COV_MERGED_UCDB) $(COV_UCDB).$${submod}
 
 
+NON_SUBSTITUTE_DEPS := $(filter-out $(SUBS_QUESTA_MODULES),$(SIM_TOP_DEPS))
 # Coverage accumulation extracts coverage for each submodule included
 # in the sim and adding that coverage to the combined coverage ucdb file.
 # The resulting $(COV_MERGED_UCDB) ucdb has individual entries per submodule.
@@ -115,7 +116,7 @@ COV_ADD_MERGE_CMD := vcover merge -note 6821 -du $${submod} $(COV_UCDB).$${submo
 ## target to run simulation batch with accumulated coverage
 batch_accumulate_coverage: $(COV_UCDB)
 	@echo -e "$O Accumulting coverage $C"
-	@for submod in $(SIM_TOP_DEPS); do\
+	@for submod in $(NON_SUBSTITUTE_DEPS); do\
 	  $(HDL_BUILD_PATH)/siemens/run_siemens.sh \
 	    "Adding coverage for $${submod} to $(COV_MERGED_UCDB)" \
 	    "$(COV_ADD_MERGE_CMD)" "$(BLOG_DIR)/cov_add_$${submod}.log";true;\
