@@ -73,6 +73,7 @@ $(COV_DO_DONE): $(COV_DO_DEP)
 # to run make commands cleanly in GUI, remove -j flags
 ## target to run simulation in GUI with coverage
 sim_coverage: $(PARAMETER_DONE) $(COV_DO_DONE) $(COV_VOPT_DONE) $(presim_hook)
+	$(eval PRESIM_GOAL = vopt_coverage)
 	@echo -e "$(sim_coverage_str)" > $(SIM_SCRIPT)
 	@echo -e '$(restart_str)' > $(RESTART_SCRIPT)
 	@echo -e '$(resim_str)' > $(RESIM_SCRIPT)
