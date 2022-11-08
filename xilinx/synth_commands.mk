@@ -53,7 +53,8 @@ endef
 
 define xcix_cmd_raw
 
-echo "read_ip $(IP_DIR)/$*.xcix" > $(FILES_TCL).$*
+echo "read_ip $(fpath)" > $(FILES_TCL).$*
+
 
 endef
 
