@@ -18,7 +18,7 @@ PARAM_STRING = 	$(shell cat "$(PARAMETER_TCL)")
 # This comes after reading in source files
 define synth_tcl
 
-synth_design -top $(TOP_SYNTH) -part $(DEVICE) $(PARAM_STRING) $(SYNTH_SETTINGS)
+synth_design -top $(TOP_SYNTH) -part $(DEVICE) $(PARAM_STRING) $(SYNTH_ARGS)
 write_checkpoint -force $(SYNTH_DIR)/post_synth.dcp
 report_timing_summary -file $(SYNTH_DIR)/post_synth_timing_summary.rpt
 report_utilization -file $(SYNTH_DIR)/post_synth_util.rpt
@@ -30,21 +30,21 @@ define impl_tcl
 
 set outputDir $(SYNTH_DIR)
 
-opt_design
-place_design
+opt_design $(OPT_DESIGN_ARGS)
+place_design $(PLACE_DESIGN_ARGS)
 report_clock_utilization -file $(SYNTH_DIR)/clock_util.rpt
 
 # Optionally run optimization if there are timing violations after placement
 if {[get_property SLACK [get_timing_paths -max_paths 1 -nworst 1 -setup]] < 0} {
     puts \"Found setup timing violations => running physical optimization\"
-    phys_opt_design
+    phys_opt_design $(PHYS_OPT_DESIGN_ARGS)
 }
 
 write_checkpoint -force $(SYNTH_DIR)/post_place.dcp
 report_utilization -file $(SYNTH_DIR)/post_place_util.rpt
 report_timing_summary -file $(SYNTH_DIR)/post_place_timing_summary.rpt
 
-route_design
+route_design $(ROUTE_DESIGN_ARGS)
 write_checkpoint -force $(SYNTH_DIR)/post_route.dcp
 report_route_status -file $(SYNTH_DIR)/post_route_status.rpt
 report_timing_summary -file $(SYNTH_DIR)/post_route_timing_summary.rpt

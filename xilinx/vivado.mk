@@ -111,13 +111,13 @@ endif
 ##################### Synthesis Parameters ##############################
 SYNTH_TOP_DEPS := $(sort $(strip $($(TOP_SYNTH)_DEPS)))
 
-# SYNTH_SETTINGS: Set in upper Makefile
+# SYNTH_ARGS: Set in upper Makefile
 VIVADO_BATCH := vivado -mode batch -log $(PROJECT).log -journal $(PROJECT).jou
 
 
 ## file paths to xdc constraints files that will be used in the build
 # XDC_FILES: set in upper Makefile
-XDC_DONE := $(DONE_DIR)/xci.done
+XDC_DONE := $(DONE_DIR)/xdc.done
 
 ##################### Directory targets ##############################
 $(SYNTH_DIR): | $(BLD_DIR)
@@ -238,14 +238,22 @@ $(DEP_DIR)/%.vivado.o:  $(NOTHING_DEP) | $(DONE_DIR) $(DEP_DIR) $(BLOG_DIR) $(IP
 	  fi; \
 	  if  [[ "$(fpath)" == *.v || "$(fpath)" == *.sv || "$(fpath)" == *.svh || "$(fpath)" == *.vh ]]; then \
 	      $(HDL_BUILD_PATH)/xilinx/run_xilinx.sh '$(COMP_MSG)' '$(sv_cmd)' '$(BLOG_DIR)/sv_vivado_$*.log'; \
-	  else echo "Unknown filetype: $(fpath)"; echo "$^"; exit 1; fi; \
+	  else if [[ "$(fpath)" == *.xci ]]; then \
+	      $(HDL_BUILD_PATH)/xilinx/run_xilinx.sh '$(COMP_MSG)' '$(xci_cmd)' '$(BLOG_DIR)/xci_vivado_$*.log'; \
+	  else if [[ "$(fpath)" == *.xcix ]]; then \
+	      $(HDL_BUILD_PATH)/xilinx/run_xilinx.sh '$(COMP_MSG)' '$(xcix_cmd)' '$(BLOG_DIR)/xcix_vivado_$*.log'; \
+	  else echo "Unknown filetype: $(fpath)"; echo "$^"; exit 1; fi; fi; fi;\
 	  touch $@; \
 	else false; fi
 
 
 ##################### Project targets ##############################
 # Create rules to create inputs to tcl script files
-# SYNTH_SETTINGS: Set in upper Makefile
+# SYNTH_ARGS: Set in upper Makefile
+# OPT_DESIGN_ARGS: Set in upper Makefile
+# PLACE_DESIGN_ARGS: Set in upper Makefile
+# PHYS_OPT_DESIGN_ARGS: Set in upper Makefile
+# ROUTE_DESIGN_ARGS: Set in upper Makefile
 
 include $(HDL_BUILD_PATH)/xilinx/synth_tcl.mk
 $(SYNTH_TCL): $(FILES_TCL) $(PARAMETER_TCL) $(XDC_DONE) | $(TCL_DIR) $(SYNTH_DIR)
@@ -253,15 +261,15 @@ $(SYNTH_TCL): $(FILES_TCL) $(PARAMETER_TCL) $(XDC_DONE) | $(TCL_DIR) $(SYNTH_DIR
 	@cat $(FILES_TCL) >> $@
 	@echo -e "$(TCL_XDC)" >> $@
 	@echo -e "$(synth_start)" >> $@
-	touch $@
+	@touch $@
 
 $(IMPL_TCL): | $(TCL_DIR) $(SYNTH_DIR)
 	@echo -e "$(synth_impl)" > $@
-	touch $@
+	@touch $@
 
 $(BITGEN_TCL): | $(TCL_DIR) $(SYNTH_DIR)
 	@echo -e "$(synth_bitgen)" > $@
-	touch $@
+	@touch $@
 
 .PHONY: project
 ## target to create Vivado project
@@ -302,7 +310,6 @@ $(IP_MK): $(SYNTH_TCL)
 ipgen: $(DONE_DIR)/gen_ip.done | $(DONE_DIR)
 # IP rules are built up in $(IP_MK)
 $(DONE_DIR)/gen_ip.done: $(IP_MK)
-	echo "TODO: ip gen"
 	@touch $@
 
 
