@@ -150,7 +150,6 @@ $(NOTHING_DEP): | $(DONE_DIR)
 
 # the .o files will write to individual files, so cat together into one file
 $(FILES_TCL): $(SYNTH_SUB_DONE) $(presynth_hook) $(DEP_DIR)/$(TOP_SYNTH).vivado.o | $(DEP_DIR) $(TCL_DIR)
-	@cat $(FILES_TCL).* > $@
 	@touch $@
 
 ##### Parameters ##
@@ -472,7 +471,7 @@ synth_archive: $(DONE_DIR)/timing_rpt_seq.done
 clean: clean_vivado
 .PHONY: clean_vivado
 clean_vivado:
-	@rm -rf $(SYNTH_DIR) $(TCL_DIR) $(IP_DIR)
+	@rm -rf $(SYNTH_DIR) $(TCL_DIR) $(IP_DIR) .Xil
 
 .PHONY: cleanall
 cleanall: cleanall_vivado

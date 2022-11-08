@@ -35,7 +35,8 @@ ip_makefile = $(subst ",\", $(subst $(newline),\n,$(ip_makefile_raw)))
 
 # These define the commands to run for vivado .o files
 define sv_cmd_raw
-echo "read_verilog $(fpath)" > $(FILES_TCL).$*
+touch $(FILES_TCL)
+echo "read_verilog $(fpath)" >> $(FILES_TCL)
 endef
 
 
@@ -46,14 +47,18 @@ python3 $(HDL_BUILD_PATH)/xilinx/move_xci.py $(fpath) $(IP_DIR)/$*.xci $*
 
 export MNAME=$*;
 echo -e "$(ip_makefile)" > $(IP_MK).$*
-echo "read_ip $(IP_DIR)/$*.xci" > $(FILES_TCL).$*
+touch $(FILES_TCL)
+sed -i "\|read_ip $(IP_DIR)/$*.xci|d" $(FILES_TCL)
+echo "read_ip $(IP_DIR)/$*.xci" >> $(FILES_TCL)
 
 endef
 
 
 define xcix_cmd_raw
 
-echo "read_ip $(fpath)" > $(FILES_TCL).$*
+touch $(FILES_TCL)
+sed -i "\|read_ip $(fpath)|d" $(FILES_TCL)
+echo "read_ip $(fpath)" >> $(FILES_TCL)
 
 
 endef
