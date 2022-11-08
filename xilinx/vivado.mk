@@ -33,12 +33,14 @@ printvivado-%:
 ## synthesis enforces `SYNTH_TOOL` version match against tool on `PATH`. Run make with `SYNTH_OVERRIDE=1` to ignore the check.
 # SYNTH_OVERRIDE: set in upper Makefile
 
+export VIVADO_VERSION_FOUND := $(shell vivado -version | grep Vivado | awk '{print substr($$2,2)}')
+
 # Recipe to always run
 .PHONY: always_run
 always_run:
 	@ if [[ "$(SYNTH_OVERRIDE)" != "y" ]]; then \
-	    if [[ `which vivado` != *"$(SYNTH_TOOL)"* ]]; then \
-	      echo -e "ERROR: $(RED)Missing vivado tool $(SYNTH_TOOL) from path$(NC)\n (prefix with SYNTH_OVERRIDE=y to override)"; false; \
+	    if [[ $(VIVADO_VERSION) != $(VIVADO_VERSION_FOUND) ]]; then \
+	      echo -e "ERROR: $(RED)Vivado version $(VIVADO_VERSION_FOUND) found but $(VIVADO_VERSION) is set $(NC)\n (prefix with SYNTH_OVERRIDE=y to override)"; false; \
 	fi; fi
 
 
