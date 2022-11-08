@@ -47,8 +47,6 @@ python3 $(HDL_BUILD_PATH)/xilinx/move_xci.py $(fpath) $(IP_DIR)/$*.xci $*
 export MNAME=$*;
 echo -e "$(ip_makefile)" > $(IP_MK).$*
 echo "read_ip $(IP_DIR)/$*.xci" > $(FILES_TCL).$*
-echo "generate_target all [get_files $*.xci]" >> $(FILES_TCL).$*
-echo "synth_ip [get_files $*.xci]" >> $(FILES_TCL).$*
 
 endef
 

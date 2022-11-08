@@ -52,6 +52,7 @@ TCL_DIR := $(BLD_DIR)/tcl
 FILES_TCL := $(TCL_DIR)/include_files.tcl
 PARAMETER_TCL := $(TCL_DIR)/parameters.tcl
 SYNTH_TCL := $(TCL_DIR)/synth.tcl
+PROJECT_TCL := $(TCL_DIR)/project.tcl
 IMPL_TCL := $(TCL_DIR)/impl.tcl
 BITGEN_TCL := $(TCL_DIR)/bitgen.tcl
 GIT_INFO_FILE := $(SYNTH_DIR)/git_info.txt
@@ -265,6 +266,14 @@ $(SYNTH_TCL): $(FILES_TCL) $(PARAMETER_TCL) $(XDC_DONE) | $(TCL_DIR) $(SYNTH_DIR
 	@echo -e "$(synth_start)" >> $@
 	@touch $@
 
+$(PROJECT_TCL): $(FILES_TCL) $(PARAMETER_TCL) $(XDC_DONE) | $(TCL_DIR) $(SYNTH_DIR)
+	@echo -e "$(synth_path)" > $@
+	@echo -e "$(synth_proj)" >> $@
+	@cat $(FILES_TCL) >> $@
+	@echo -e "$(TCL_XDC)" >> $@
+	@touch $@
+
+
 $(IMPL_TCL): | $(TCL_DIR) $(SYNTH_DIR)
 	@echo -e "$(synth_impl)" > $@
 	@touch $@
@@ -275,8 +284,13 @@ $(BITGEN_TCL): | $(TCL_DIR) $(SYNTH_DIR)
 
 .PHONY: project
 ## target to create Vivado project
-# TODO: Create a project flow
-project: $(SYNTH_TCL)
+project: $(PROJECT_TCL)
+
+
+.PHONY: vivado
+## target to open Vivado GUI
+vivado: $(PROJECT_TCL)
+	vivado -source $(PROJECT_TCL) -log $(PROJECT).log -journal $(PROJECT).jou &
 
 
 # Log relevant repo information before building

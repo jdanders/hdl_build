@@ -62,8 +62,15 @@ write_debug_probes -force $(SYNTH_DIR)/$(TOP_SYNTH).ltx
 
 endef
 
+define proj_tcl
+
+create_project $(TOP_SYNTH) $(SYNTH_DIR) -part $(DEVICE) -force
+
+endef
+
 # Convert the raw string above into `echo -e` friendly strings
 synth_path = $(subst ",\", $(subst $(newline),\n,$(path_tcl)))
 synth_start = $(subst ",\", $(subst $(newline),\n,$(synth_tcl)))
 synth_impl = $(subst ',\', $(subst $(newline),\n,$(impl_tcl)))
 synth_bitgen = $(subst ',\', $(subst $(newline),\n,$(bitstream_tcl)))
+synth_proj = $(subst ',\', $(subst $(newline),\n,$(proj_tcl)))
