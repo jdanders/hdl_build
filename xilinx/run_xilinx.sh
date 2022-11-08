@@ -2,7 +2,8 @@
 # parameters: 'message' 'command' 'path to log file'
 # like: run_questa.sh 'Compiling' 'vlog /dir/mymodule.sv' '${BLOG_DIR}/log.log'
 msg=${1}
-cmd=${2}
+# translate \n back to newline
+cmd=$(echo -e "${2}")
 logfile=${3}
 
 

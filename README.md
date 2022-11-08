@@ -57,7 +57,7 @@ To add new makefiles that are not upstreamed, create `*_addon.mk` or `*_custom.m
 
 Module, package, and include dependencies are automatically determined for verilog sources.
 
-* Modules can only be implemented in files with `.v` or `.sv` extensions. Non-HDL modules like vendor IP are not discovered automatically and must be specified as a `subtitution`.
+* Modules can only be implemented in files with `.v` or `.sv` extensions. Non-HDL modules like vendor IP are not discovered automatically and must be specified as a `substitution`.
 * The module name must be the same as the "base" of the filename. For example, module `fifo` could be implemented as `fifo.sv`.
     * Megafunction IP cores should be saved using the `_qmw.v` suffix. This is the only exception where the filename can be different than the module name. For example, a PLL called `clkgen` should be stored as `clkgen_qmw.v` (this is the file that has the megawizard settings embedded as comments). The module name in the code should still be `clkgen` without the `_qmw` extension. The build system will automatically handle building the megafunction for synthesis.
 * Only a single module definition is allowed per file.
@@ -234,6 +234,42 @@ The **`quartus.mk`** file provides Quartus related targets and consumes the depe
 * **`timing_rpt_timing`**: target to print timing report after repeating fit until timing is met
 * **`timing_check_all`**: target to report timing problems
 * **`timing_check_all_timing`**: target to report timing problems after repeating fit until timing is met
+
+
+### vivado.mk
+
+The **`vivado.mk`** file provides Vivado related targets and consumes the dependency analysis results of **`build.mk`**.
+
+* **`TOP_SYNTH`**: identify the top module to be simulated with `TOP_SYNTH`. If not set, `TOP` will be used.
+* **`DEVICE`**: identify the FPGA device part number, should match string in project settings
+* **`$(presynth_hook)`**: target hook to run before any synth work
+* **`$(post_gen_ip_hook)`**: target hook to run after ip generation is done, before mapping
+* **`printvivado-%`**: use `make printvivado-VAR_NAME` to print variable after Vivado processing
+* **`SYNTH_OVERRIDE`**: synthesis enforces `SYNTH_TOOL` version match against tool on `PATH`. Run make with `SYNTH_OVERRIDE=1` to ignore the check.
+* **`SYNTH_SUBSTITUTIONS`**: a space delineated list of either `module:filename` mappings, or paths to a yaml file defining mappings. If a mapping is blank, dependency matching for the module is blocked. See `examples/example-subs.yml`.        * `SYNTH_SUBSTITUTIONS = $(shell git_root_path mocks/s10_mocks.yml) eth_100g:$(shell git_root_path mocks/100g_core.ip simonly_check:`
+* **`XDC_FILES`**: file paths to xdc constraints files that will be used in the build
+* **`filelist_synth`**: print list of files used in synth
+* **`modules_synth`**: print list of modules used in synth
+* **`PARAM_*`**: monitors variables prefixed with **`PARAM_`** and passes them to Vivado. `PARAM_NUM_PORTS := 2` passes a parameter named NUM_PORTS with value of 2.
+* **`project`**: target to create Vivado project
+* **`vivado`**: target to open Vivado GUI
+* **`git_info`**: target to archive git info in project directory
+* **`ipgen`**: target to generate Xilinx IP
+* **`synth_only`**: target to run through synthesis only
+* **`impl`**: target to run through Implemenation
+* **`bitgen`**: target to run through Bitstream generation
+* **`timing`**: target to run through Vivado timing (no bitgen)
+* **`gen_timing_rpt`**: target to generate TQ_timing_report.txt
+* **`run_timing_rpt`**: target to generate TQ_timing_report.txt without checking dependencies
+* **`synth`**: target to run full synthesis: synth impl bitgen timing
+* **`ARCHIVE_DIR`**: archive base location, default is `$(BLD_DIR)/archive`
+* **`ARCHIVE_SUB_DIR`**: archive subdirectory location, default is `build_YYYY_MM_DD-HH.MM-gitbranch`
+* **`ARCHIVE_FILE_PREFIX`**: prefix archive files, default is `archive_`
+* **`ARCHIVE_DEST`**: path archive files will be copied. Default is `$(ARCHIVE_DIR)/$(ARCHIVE_SUB_DIR)`
+* **`archive_synth_results`**: target to archive synthesis results to `ARCHIVE_DEST`
+* **`synth_archive`**: target to run full synthesis and archive when done
+* **`timing_rpt`**: target to print timing report
+* **`timing_rpt_timing`**: target to print timing report after repeating fit until timing is met
 
 
 # Outside of git

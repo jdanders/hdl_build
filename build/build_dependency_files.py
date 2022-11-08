@@ -101,7 +101,6 @@ def write_depfile(name, filelist, subs_dict, args):
     path = find_module(name, filelist, subs_dict)
     if path is None:
         return
-    text = open(path, 'r').read()
     prefixes = args.outprefixlist.split(',')
     ostrings = {}
     dstrings = {}
@@ -120,6 +119,7 @@ def write_depfile(name, filelist, subs_dict, args):
     if ".sv" not in path and ".v" not in path:
         deps = []
     else:
+        text = open(path, 'r').read()
         deps = find_deps(path, name, text, args)
     print(f"Processing dependencies for {name}: {deps}")
 

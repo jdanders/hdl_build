@@ -240,6 +240,33 @@ After `project.tcl` is processed into the project `.qpf` and `.qsf` files, targe
 
 Because these are different dependency paths, everything starting with fit stage needs to differentiate between default and `_timing` targets. So `synth` and `synth_timing` are the full `synth` goal, but `synth_timing` repeats to make timing.
 
+# Vivado Synthesis architecture
+
+Vivado scripted synthesis gives two option: project and non-project mode. Non-project mode is the default for synthesis here using design checkpoint (.dcp) files. There is a make target to make a project and open the GUI instead.
+
+Synthesis requires building up the tcl script file, generation of IP files, and execution of the tcl script files.
+
+## Module and package inclusion
+
+Like the Quartus flow, all needed dependencies are added to `include_files.tcl`. However, in non-project mode, compile order matters so we can't just cat all the dependency lines together in a random order. So, for each dependency, the line containing the file is just added directly to the end of `include_files.tcl`. This has the weakness that if a new dependency is added, a `make clean` needs to be run before trying to build again.
+
+This file is combined with several other tcl files to generate tcl scripts for each stage of synthesis: `synth.tcl`, `impl.tcl`, and `bitgen.tcl`. `project.tcl` is optionally created when using a project-flow.
+
+## '.o' recipe and run_xilinx.sh
+
+The `vivado.mk` `.o` recipe supports `.svh/.vh` and `.sv/.v` files, as well as Xilinx `.xci` IP files or `.xcix` core container files.
+
+For verilog sources, as well as the `.xcix` core container files, appropriate lines are added to the `synth.tcl` file.
+
+All `.xci` IP Makefile templates and commands used for synthesis are stored in `synth_commands.mk`. The Makefiles create a `_gen.tcl` target that runs a recipe to process the source IP file into the generated files needed for synthesis. The original `.xci` file is copied into the IP generation directory before generation. It is also changed so that its `OUTPUTDIR` property is changed to `.`. This ensures that all output products remain inside the IP gen directory.
+
+## Vivado processing
+
+After the tcl scripts are generated, targets are defined for each stage of processing.
+
+When the project mode is used by running `make vivado`, options specified in the Makefile for synthesis or implementation directives will not be brought into the project. This is currently a weakness of Vivado. The GUI must be used to set those directives and start each stage of synthesis and implementation.
+
+
 # Adding new tools or features
 
 Features that will be contributed back to the main hdl_build project can follow the pattern of `quartus.mk` and `questa.mk`. For local changes that will be used internally but not contributed back, add a suffix of `_addon.mk` to the new makefile. For changes that will exist only in a local repo and won't be checked in, add a suffix of `_custom.mk`.
