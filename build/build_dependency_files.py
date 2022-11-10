@@ -36,6 +36,7 @@ seen_deps = []
 def add_subs_module(srcbase, module, filepath, subs_dict):
     if filepath:
         fullpath = os.path.join(srcbase, filepath.strip())
+        fullpath = os.path.expandvars(fullpath)
         subs_dict[module.strip()] = fullpath
     else:
         # No path means remove module

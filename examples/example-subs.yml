@@ -8,3 +8,8 @@ bad_mod:
 include:
   - chip/a10_substitutions.yml
   - chip/s10_substitutions.yml
+
+# Use environment variables to build path
+# variables set in makefile must have 'export' in front of them
+ip_core: path/off/SRC_BASE_DIR/$VIVADO_VERSION/ip_core.xci
+ip_core_2: path/off/SRC_BASE_DIR/$DEVICE/ip_core_2.xci
