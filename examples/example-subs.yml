@@ -4,6 +4,11 @@ modulename: path/off/SRC_BASE_DIR/modulev1.sv
 # Empty assignment means leave module out of project
 bad_mod:
 
+# Use environment variables to build path
+# variables set in makefile must have 'export' in front of them
+ip_core: path/off/SRC_BASE_DIR/$VIVADO_VERSION/ip_core.xci
+ip_core_2: path/off/SRC_BASE_DIR/$DEVICE/ip_core_2.xci
+
 # Include other yaml files
 include:
   - chip/a10_substitutions.yml
