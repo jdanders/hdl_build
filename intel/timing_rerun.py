@@ -166,7 +166,7 @@ def main():
     timing_result = build_for_timing(syn_dir, args.project,
                                      map_dir, tmp_dir, args.num)
     # Clean up and report
-    run('rm -rf bld/*_mapped')
+    run(f'rm -rf {map_dir}')
     worst = run(script_dir + '/timing_worst_paths.py').decode(errors='ignore')
     if slack_history:
         slack_history.sort()
